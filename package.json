@@ -1,0 +1,10 @@
+{
+  "name": "ml-visual-lab",
+  "description": "ChatGPTのWorkで作成した、ブラウザで機械学習モデルを学習・可視化する実験サイト",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check dist/advanced.js && node --check dist/app.js && node --check dist/ml.js && node --check dist/preprocessing-ui.js && node --check dist/preprocessing.js && node --check dist/samples.js && node --check dist/visuals.js && node --check dist/worker.js"
+  }
+}

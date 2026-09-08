@@ -1,0 +1,38 @@
+# dist/ contains the actual source files and must stay tracked.
+
+# Dependencies and temporary output
+node_modules/
+coverage/
+.cache/
+*.log
+*.tmp
+*.temp
+
+# Local environment files (keep shareable examples)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Local experiment data and source distribution archives
+/data/local/
+/ml-visual-lab-source*.zip
+
+# Editor and operating system files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Python HTTP server / local tooling
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# zip file
+*.zip
