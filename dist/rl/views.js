@@ -19,7 +19,7 @@ export function banditView(bandit, reveal) {
     const ucbRows = ucb
       ? `<span class="rl-ucb-bonus">探索Bonus ${fmt(bonus)}</span><strong class="rl-ucb-score">UCB Score ${fmt(score)}</strong>`
       : '';
-    return `<article class="rl-slot ${bandit.last?.action === i ? 'selected' : ''}"><h4>🎰 ${String.fromCharCode(65 + i)}</h4>${i === topArm ? '<span class="rl-ucb-tag">▲ 最大スコア</span>' : ''}<span>選択 ${bandit.counts[i]} 回</span><strong>Q(a) ${q.toFixed(3)}</strong>${ucbRows}<meter min="0" max="1" value="${q}" aria-label="アーム${i + 1}の推定価値"></meter><span>累積報酬 ${bandit.totals[i]}</span><small>${reveal ? `真の確率 ${(bandit.probabilities[i] * 100).toFixed(0)}%` : '真の確率はまだ秘密'}</small></article>`;
+    return `<article class="rl-slot ${bandit.last?.action === i ? 'selected' : ''}">${i === topArm ? '<span class="rl-ucb-tag">UCB最大</span>' : ''}<h4>🎰 ${String.fromCharCode(65 + i)}</h4><span>選択 ${bandit.counts[i]} 回</span><strong>Q(a) ${q.toFixed(3)}</strong>${ucbRows}<meter min="0" max="1" value="${q}" aria-label="アーム${i + 1}の推定価値"></meter><span>累積報酬 ${bandit.totals[i]}</span><small>${reveal ? `真の確率 ${(bandit.probabilities[i] * 100).toFixed(0)}%` : '真の確率はまだ秘密'}</small></article>`;
   }).join('')}</div>`;
 }
 export { mazeDiorama as mazeView } from './maze-view.js';

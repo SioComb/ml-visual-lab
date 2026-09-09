@@ -1,6 +1,20 @@
 import { random, choose } from './random.js';
 
 export const BANDIT_NAMES = { greedy: 'Greedy', epsilon: 'ε-Greedy', ucb: 'UCB' };
+
+// True per-arm reward probabilities: a fixed spread of values shuffled by the
+// seed. Deterministic, so the same Seed always reproduces the same arms. This
+// is the environment, not the learning algorithm.
+export function armProbabilities(seed = 42, arms = 3) {
+  const environment = random(seed + 200);
+  const probabilities = Array.from({ length: arms }, (_, i) => 0.15 + i * 0.65 / (arms - 1));
+  for (let i = arms - 1; i > 0; i--) {
+    const j = Math.floor(environment() * (i + 1));
+    [probabilities[i], probabilities[j]] = [probabilities[j], probabilities[i]];
+  }
+  return probabilities;
+}
+
 export class Bandit {
   constructor({ seed = 42, arms = 3, algorithm = 'epsilon', epsilon = 0.1 } = {}) {
     this.algorithm = algorithm;
@@ -8,12 +22,7 @@ export class Bandit {
     this.rng = random(seed);
     // Each arm has its own reward stream: comparisons share the same kth pull.
     this.rewards = Array.from({ length: arms }, (_, i) => random(seed + 100 + i));
-    const environment = random(seed + 200);
-    this.probabilities = Array.from({ length: arms }, (_, i) => 0.15 + i * 0.65 / (arms - 1));
-    for (let i = arms - 1; i > 0; i--) {
-      const j = Math.floor(environment() * (i + 1));
-      [this.probabilities[i], this.probabilities[j]] = [this.probabilities[j], this.probabilities[i]];
-    }
+    this.probabilities = armProbabilities(seed, arms);
     this.counts = Array(arms).fill(0);
     this.q = Array(arms).fill(0);
     this.totals = Array(arms).fill(0);

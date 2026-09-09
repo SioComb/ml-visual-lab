@@ -1,4 +1,4 @@
-import { Bandit, BANDIT_NAMES } from './bandit.js';
+import { Bandit, BANDIT_NAMES, armProbabilities } from './bandit.js';
 import { MAZES, DIRECTIONS, generateMaze } from './maze.js';
 import { QLearner } from './qlearning.js';
 import { environment, TrainingSession } from './session.js';
@@ -39,7 +39,7 @@ export function initReinforcement() {
   let comparisons = [];
   const root = $('reinforcement');
   const robotAnimator = createRobotAnimator();
-  root.innerHTML = `<nav class="rl-lessons" aria-label="強化学習の学習順序">${Object.entries(lessons).map(([key, [n, name]]) => `<button class="quiet" data-lesson="${key}" aria-pressed="false"><span>${n}</span> ${name}</button>`).join('<span class="rl-next" aria-hidden="true">→</span>')}</nav><div class="workspace rl-workspace"><aside class="settings"><section class="setting-section"><div class="section-title"><span class="step">01</span><h2>実験を設定する</h2></div><div id="rl-fields"></div><p class="field-help">速度以外の設定変更は学習をリセットします。同じSeed・設定で再現できます。</p></section><div class="train-area"><button id="rl-step" class="quiet">1ステップ</button><button id="rl-run" class="primary">▶ 自動実行</button><button id="rl-pause" class="quiet">一時停止</button><button id="rl-play" class="quiet">▷ Play / Evaluation</button><button id="rl-reset" class="quiet">リセット</button></div></aside><div class="results"><div class="result-heading"><div><div class="eyebrow">REINFORCEMENT LEARNING</div><h2 id="rl-title"></h2><p id="rl-subtitle"></p></div><span id="rl-status" class="status" role="status" aria-live="polite">準備完了</span></div><section class="panel rl-intro"><strong id="rl-algorithm"></strong><p id="rl-explanation"></p></section><div class="metrics rl-metrics" id="rl-metrics"></div><div class="rl-environment-grid"><section class="panel"><div class="rl-panel-heading"><h3>環境と行動</h3><label class="check" id="rl-overlay-label"><input id="rl-overlay" type="checkbox" checked> 方策を重ねる</label><label class="check" id="rl-reveal-label"><input id="rl-reveal" type="checkbox"> 真の確率を表示</label></div><div id="rl-board"></div><p id="rl-action" class="rl-action"></p><p id="rl-legend" class="field-help"></p></section><section class="panel" id="rl-detail"></section></div><section class="panel rl-learning"><h3>学習の結果</h3><p id="rl-progress" class="field-help"></p><div class="rl-charts" id="rl-charts"></div><div id="rl-comparison"></div></section><section class="panel rl-reading"><div class="eyebrow">READ THE LEARNING</div><h3>学習と再生を見比べよう</h3><p id="rl-reading"></p><p id="rl-update" class="rl-formula"></p></section></div></div>`;
+  root.innerHTML = `<nav class="rl-lessons" aria-label="強化学習の学習順序">${Object.entries(lessons).map(([key, [n, name]]) => `<button class="quiet" data-lesson="${key}" aria-pressed="false"><span>${n}</span> ${name}</button>`).join('<span class="rl-next" aria-hidden="true">→</span>')}</nav><div class="workspace rl-workspace"><aside class="settings"><section class="setting-section"><div class="section-title"><span class="step">01</span><h2>実験を設定する</h2></div><div id="rl-fields"></div><p class="field-help">速度以外の設定変更は学習をリセットします。同じSeed・設定で再現できます。</p></section><div class="train-area"><button id="rl-step" class="quiet">1ステップ</button><button id="rl-run" class="primary">▶ 自動実行</button><button id="rl-pause" class="quiet">一時停止</button><button id="rl-play" class="quiet">▷ Play / Evaluation</button><button id="rl-reset" class="quiet">リセット</button></div></aside><div class="results"><div class="result-heading"><div><div class="eyebrow">REINFORCEMENT LEARNING</div><h2 id="rl-title"></h2><p id="rl-subtitle"></p></div><span id="rl-status" class="status" role="status" aria-live="polite">準備完了</span></div><section class="panel rl-intro"><strong id="rl-algorithm"></strong><p id="rl-explanation"></p></section><div class="metrics rl-metrics" id="rl-metrics"></div><div class="rl-environment-grid"><section class="panel"><div class="rl-panel-heading"><h3>環境と行動</h3><label class="check" id="rl-overlay-label"><input id="rl-overlay" type="checkbox" checked> 方策を重ねる</label><label class="check" id="rl-reveal-label"><input id="rl-reveal" type="checkbox"> 真の確率を表示</label><button type="button" id="rl-shuffle" class="quiet" hidden>🎲 確率をシャッフル</button></div><div id="rl-board"></div><p id="rl-action" class="rl-action"></p><p id="rl-legend" class="field-help"></p></section><section class="panel" id="rl-detail"></section></div><section class="panel rl-learning"><h3>学習の結果</h3><p id="rl-progress" class="field-help"></p><div class="rl-charts" id="rl-charts"></div><div id="rl-comparison"></div></section><section class="panel rl-reading"><div class="eyebrow">READ THE LEARNING</div><h3>学習と再生を見比べよう</h3><p id="rl-reading"></p><p id="rl-update" class="rl-formula"></p></section></div></div>`;
 
   function settings() {
     let html = kind === 'bandit' ? selectField('algorithm', 'アルゴリズム', BANDIT_NAMES) + numberField('arms', 'スロット数', 3, 3, 5) : '';
@@ -159,6 +159,7 @@ export function initReinforcement() {
     const epsilonLabel = $('rl-fields').querySelector('label[for="rl-epsilon"]');
     if (epsilonLabel) epsilonLabel.hidden = noEpsilon;
     $('rl-overlay-label').hidden = kind !== 'maze'; $('rl-reveal-label').hidden = !isBandit;
+    $('rl-shuffle').hidden = !isBandit;
     $('rl-algorithm-name').textContent = isBandit ? `使用中：${BANDIT_NAMES[config.algorithm]}` : `使用中：Q-learning + ε-Greedy${evaluation ? '（再生はε=0）' : ''}`;
     const last = isBandit ? bandit.last : evaluation ? evaluation.last : snapshot.last;
     $('rl-action').textContent = last ? `${isBandit ? 'アーム ' + String.fromCharCode(65 + last.action) : '行動 ' + DIRECTIONS[last.action]} · ${last.reason ?? (last.exploring ? '探索 Exploration' : '活用 Exploitation')} · Reward ${last.reward.toFixed(1)}` : evaluation ? '学習済みのQ値で、最初の行動を選びます。' : '1ステップで、最初の行動を見てみましょう。';
@@ -230,6 +231,23 @@ export function initReinforcement() {
     stop(); pendingPlay = true; worker?.postMessage({ type: 'pause' });
   };
   $('rl-reset').onclick = reset;
+  // Re-roll the environment: new true probabilities from a fresh Seed. Same Seed
+  // reproduces the same arms; changing them clears all progress and comparisons.
+  $('rl-shuffle').onclick = () => {
+    if (kind !== 'bandit' || !bandit) return;
+    const next = readConfig();
+    if (!next) { $('rl-status').textContent = '入力値を確認'; return; }
+    let seed = next.seed;
+    const current = bandit.probabilities.join();
+    for (let attempt = 0; attempt < 32; attempt++) {
+      seed = (seed + 1) >>> 0;
+      if (armProbabilities(seed, next.arms).join() !== current) break;
+    }
+    $('rl-seed').value = seed;
+    comparisons = [];
+    reset();
+    $('rl-status').textContent = '確率をシャッフル · Seed ' + seed;
+  };
   $('rl-overlay').onchange = $('rl-reveal').onchange = render;
   $('rl-board').onclick = event => { const cell = event.target.closest('[data-state]'); if (cell) { selected = Number(cell.dataset.state); render(); } };
   document.addEventListener('visibilitychange', () => { if (document.hidden && active) { stop(); $('rl-status').textContent = '一時停止'; render(); } });
