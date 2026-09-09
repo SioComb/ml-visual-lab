@@ -2,6 +2,7 @@ import {sampleOptions} from './samples.js';
 import {sample,parseCSV,numeric} from './ml.js';
 import {renderPreprocessing,processedCSVRows} from './preprocessing-ui.js';
 import {modelOverlay,renderClustering,drawClusters} from './visuals.js';
+import {initReinforcement} from './rl/ui.js';
 const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),palette=['#248574','#6486d9','#d49b45','#b373b6','#d87066','#54a4b4','#8f9650','#846bba'];const classPalette=['#0072B2','#C45D00','#8B429D','#00845F','#B53854','#726214','#2B879C','#505A70'];let task='regression',dataset=sample(),result=null,busy=false,worker=null,dirty=false;const names={linear:'線形回帰',polynomial:'多項式回帰',logistic:'ロジスティック回帰',knn:'k近傍法（k-NN）',forest:'ランダムフォレスト',svm:'サポートベクターマシン（SVM）',svr:'サポートベクター回帰（SVR）',kmeans:'k-means法（非階層的）',hierarchical:'階層的クラスタリング'};const descriptions={linear:'1本の直線で、数値の増え方・減り方をとらえます。',polynomial:'曲線で関係をとらえます。次数を上げると複雑な形に。',logistic:'2クラスの確率を学習し、直線の境界で分けます。',knn:'近くにある学習データの多数決で分類します。',forest:'データと入力列をランダムに選んだ複数の決定木を組み合わせます。',svm:'マージンを広く取る境界を学習します。RBFなら曲がった境界にも対応。',svr:'εの範囲内の誤差を許しながら、数値を予測するSVM系のモデルです。',kmeans:'正解ラベルを使わず、k個の重心への近さで点をまとめます。',hierarchical:'近いクラスタから順に結合し、グループの階層を樹形図で表します。'};
 function options(el,items,value){el.innerHTML=items.map(([v,t])=>`<option value="${esc(v)}">${esc(t)}</option>`).join('');if(items.some(([v])=>String(v)===String(value)))el.value=value}
 function makeSample(kind){return sample(kind,+$('noise').value,task)}
@@ -92,3 +93,25 @@ $('sample').onchange=()=>{if($('sample').value==='custom')return;dataset=makeSam
 for(const id of ['svmC','gamma','epsilon','linkage'])$(id).onchange=markDirty;
 $('kernel').onchange=()=>{$('gammaField').hidden=$('kernel').value==='linear';markDirty()};
 $('downloadProcessed').onclick=()=>{if(result&&!dirty&&!busy)download('ml-preprocessed.csv',processedCSVRows(result))};populateMode();run();
+
+// RL has its own controls and worker; existing dataset/model state is preserved.
+let reinforcement = null;
+$('rlTask').onclick = () => {
+  reinforcement ??= initReinforcement();
+  $('supervisedWorkspace').hidden = true;
+  reinforcement.show();
+  for (const id of ['regTask', 'clsTask', 'clusterTask', 'rlTask']) {
+    $(id).classList.toggle('active', id === 'rlTask');
+    $(id).setAttribute('aria-pressed', id === 'rlTask');
+  }
+};
+for (const id of ['regTask', 'clsTask', 'clusterTask']) {
+  $(id).addEventListener('click', () => {
+    reinforcement?.hide();
+    $('supervisedWorkspace').hidden = false;
+    $('rlTask').classList.remove('active');
+    $('rlTask').setAttribute('aria-pressed', false);
+    $(id).classList.add('active');
+    $(id).setAttribute('aria-pressed', true);
+  });
+}

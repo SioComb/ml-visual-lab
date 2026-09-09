@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check dist/advanced.js && node --check dist/app.js && node --check dist/ml.js && node --check dist/preprocessing-ui.js && node --check dist/preprocessing.js && node --check dist/samples.js && node --check dist/visuals.js && node --check dist/worker.js"
+    "check": "node scripts/check.js",
+    "test": "node --test tests/*.test.js"
   }
 }
