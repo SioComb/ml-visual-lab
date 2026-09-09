@@ -15,6 +15,23 @@ const lessons = {
   maze: ['02', 'Q-learning迷路', '目先の報酬から、Goalまでの行動を学ぶ。', 'バンディットのε-Greedyを、今度は各マスの行動選択に使います。探索はランダムな方向、活用は最大Q値の方向です。αは更新の大きさ、γは将来の報酬の重み。εを上げると探索が増えます。'],
   snake: ['03', 'Snake', '状態が増えたら、何を覚えればよい？', '迷路は25状態ですが、Snakeは頭・体・Foodの配置で状態が急増します。ここでは4方向の危険、Foodの相対方向、進行方向に圧縮した最大576状態でQ-learningを行います。同じ特徴でも体の配置は異なり、最適行動を区別できない限界があります。'],
 };
+// Per-algorithm copy for the Bandit lesson. UCB has no ε, so its text and
+// formula drop the ε wording entirely and describe the exploration bonus.
+const BANDIT_INTRO = {
+  greedy: '推定価値Q(a)が最大のアームを毎回選びます（探索なし）。序盤の当たり外れがそのまま方策になり、低く評価されたアームを取りこぼすことがあります。',
+  epsilon: 'εの確率でランダムなアームを試し（探索）、それ以外はQ(a)が最大のアームを選びます（活用）。εを0から0.3へ動かし、同じSeedで比較してみましょう。',
+  ucb: '推定価値Q(a)に、選択回数が少ないほど大きくなる探索ボーナスを足したUCB Scoreが最大のアームを選びます。最初に全アームを1回ずつ試し、以降はScoreで判断します。ランダムな探索は行いません。',
+};
+const BANDIT_READING = {
+  greedy: '最初の数回の結果が方策を決めます。同じ設定でもSeedを変えると選ぶアームが変わります。ε-GreedyやUCBと累積報酬を比べてみましょう。同値の最大Q値はランダムに選びます。',
+  epsilon: 'ε=0では最初の偶然に引っぱられがちです。εを増やすと不利なアームも試せますが、その場の報酬は減ります。同値の最大Q値はランダムに選びます。',
+  ucb: '探索ボーナス √(2·ln t ÷ N(a)) は、試行tが増えるほど、また選択回数N(a)が少ないほど大きくなります。あまり引いていないアームのUCB Scoreが持ち上がり、ランダム性なしで自然に探索されます。全アームを1回試すまでは未選択アームを優先します。',
+};
+const BANDIT_FORMULA = {
+  greedy: 'a = argmax Q(a)\nQ(a) ← Q(a) + [Reward − Q(a)] ÷ N(a)',
+  epsilon: '確率 ε：ランダムに選択 ／ 確率 1−ε：a = argmax Q(a)\nQ(a) ← Q(a) + [Reward − Q(a)] ÷ N(a)',
+  ucb: 'a = argmax [ Q(a) + √(2·ln t ÷ N(a)) ]\nQ(a) ← Q(a) + [Reward − Q(a)] ÷ N(a)\nt：総試行回数 ／ N(a)：アーム a の選択回数 ／ 探索Bonus = √(2·ln t ÷ N(a))',
+};
 
 export function initReinforcement() {
   let kind = 'bandit', worker = null, timer = null, running = false, snapshot = null;
@@ -135,7 +152,12 @@ export function initReinforcement() {
     $('rl-play').hidden = isBandit;
     $('rl-play').disabled = running || !worker || !snapshot?.history.length;
     $('rl-play').textContent = evaluation && !evaluation.done ? '▷ Evaluation / 再生を再開' : '▷ Play / Evaluation';
-    $('rl-epsilon').disabled = isBandit && config.algorithm !== 'epsilon';
+    // ε only applies to ε-Greedy: hide the field (and its label) for Greedy/UCB.
+    const noEpsilon = isBandit && config.algorithm !== 'epsilon';
+    $('rl-epsilon').disabled = noEpsilon;
+    $('rl-epsilon').hidden = noEpsilon;
+    const epsilonLabel = $('rl-fields').querySelector('label[for="rl-epsilon"]');
+    if (epsilonLabel) epsilonLabel.hidden = noEpsilon;
     $('rl-overlay-label').hidden = kind !== 'maze'; $('rl-reveal-label').hidden = !isBandit;
     $('rl-algorithm-name').textContent = isBandit ? `使用中：${BANDIT_NAMES[config.algorithm]}` : `使用中：Q-learning + ε-Greedy${evaluation ? '（再生はε=0）' : ''}`;
     const last = isBandit ? bandit.last : evaluation ? evaluation.last : snapshot.last;
@@ -143,6 +165,8 @@ export function initReinforcement() {
     if (isBandit) {
       $('rl-metrics').innerHTML = metric('試行', bandit.history.length, `/ ${config.limit}`) + metric('累積報酬', bandit.total) + metric('平均報酬', (bandit.total / (bandit.history.length || 1)).toFixed(3));
       $('rl-board').innerHTML = banditView(bandit, $('rl-reveal').checked);
+      $('rl-explanation').textContent = BANDIT_INTRO[config.algorithm] || BANDIT_INTRO.epsilon;
+      $('rl-reading').textContent = BANDIT_READING[config.algorithm] || BANDIT_READING.epsilon;
       $('rl-detail').hidden = true;
       $('rl-legend').textContent = '当たり +1 / はずれ 0。緑の枠が直近に選ばれたアームです。';
       $('rl-charts').innerHTML = chart(bandit.history, 'reward', '累積報酬', false, '試行') + chart(bandit.history, 'average', '平均報酬', false, '試行');
@@ -150,7 +174,7 @@ export function initReinforcement() {
       $('rl-comparison').hidden = false;
       $('rl-comparison').innerHTML = `<button class="quiet" id="rl-save" ${bandit.history.length ? '' : 'disabled'}>現在の比較結果を記録</button>${comparisons.length ? '<div class="rl-table-scroll"><table><thead><tr><th>手法</th><th>ε</th><th>Seed / 台数</th><th>試行</th><th>累積報酬</th><th>平均報酬</th></tr></thead><tbody>' + comparisons.map(c => `<tr><td>${c.name}</td><td>${c.epsilon}</td><td>${c.seed} / ${c.arms}</td><td>${c.trials}</td><td>${c.total}</td><td>${c.average}</td></tr>`).join('') + '</tbody></table></div>' : ''}`;
       $('rl-save').onclick = () => { comparisons.push({ name: BANDIT_NAMES[config.algorithm], epsilon: config.algorithm === 'epsilon' ? config.epsilon : '—', seed: config.seed, arms: config.arms, trials: bandit.history.length, total: bandit.total, average: (bandit.total / bandit.history.length).toFixed(3) }); comparisons = comparisons.slice(-6); render(); };
-      $('rl-update').textContent = 'Q(a) ← Q(a) + [Reward − Q(a)] / 選択回数';
+      $('rl-update').textContent = BANDIT_FORMULA[config.algorithm] || BANDIT_FORMULA.epsilon;
     } else {
       const env = evaluation?.env.snapshot() ?? snapshot.env;
       const steps = evaluation?.steps ?? snapshot.steps, reward = evaluation?.reward ?? snapshot.reward;

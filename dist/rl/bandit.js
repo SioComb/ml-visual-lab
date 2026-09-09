@@ -21,6 +21,11 @@ export class Bandit {
     this.total = 0;
     this.last = null;
   }
+  // Read-only view of the UCB exploration term √(2·ln t / N(a)) used in step().
+  // Untried arms have unbounded priority, so their bonus is Infinity.
+  explorationBonus(i) {
+    return this.counts[i] === 0 ? Infinity : Math.sqrt(2 * Math.log(this.history.length) / this.counts[i]);
+  }
   step() {
     const t = this.history.length;
     let selected;
