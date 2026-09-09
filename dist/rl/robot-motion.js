@@ -57,14 +57,31 @@ export function celebratePose(position, yaw, progress) {
     left: { ...leg }, right: { ...leg } };
 }
 
-// Failure recoil played after stepping onto a Trap: rock back, one foot slips,
-// a side-to-side wobble that decays into the neutral stance.
-export function stumblePose(position, yaw, progress) {
-  const t = clamp(progress), arc = Math.sin(Math.PI * t), wobble = Math.sin(t * Math.PI * 3) * (1 - t);
+// Trap arrival: the agent is shocked. A rapid left/right vibration with decaying
+// amplitude, the body locking rigid, the head display strobing a warning. Pure
+// presentation - the environment has already returned reward -10 and ended the
+// episode. `calm` (prefers-reduced-motion) drops the oscillation for a stiff
+// recoil that eases back to the neutral stance.
+export function electrocutePose(position, yaw, progress, calm = false) {
+  const t = clamp(progress);
+  if (calm) {
+    const arc = Math.sin(Math.PI * t);
+    return { ...idlePose(position, yaw), zap: t < .72 ? 1 : 0, moving: t < 1,
+      rise: -.02 * arc, lean: -.05 * arc,
+      left: { forward: -.04 * arc, lift: 0, roll: 0, planted: true },
+      right: { forward: .04 * arc, lift: 0, roll: 0, planted: true } };
+  }
+  const decay = Math.max(0, 1 - t / .82);
+  const buzz = Math.sin(t * TAU * 15) * decay, jolt = Math.sin(t * TAU * 23) * decay;
+  const brace = .17 * decay;
   return { ...idlePose(position, yaw),
-    lean: -.13 * arc, sway: .05 * wobble, turn: .7 * wobble, rise: -.03 * arc, moving: t < 1,
-    left: { forward: .05 * arc, lift: 0, roll: 0, planted: true },
-    right: { forward: -.2 * arc, lift: .06 * arc * smooth(1 - t), roll: 0, planted: t > .55 } };
+    x: position.x + .05 * buzz,
+    yaw: yaw + .13 * jolt,
+    zap: decay > .25 && Math.sin(t * TAU * 24) > -.2 ? 1 : 0,
+    rise: .02 * Math.abs(jolt) - .012 * decay,
+    lean: -.045 * decay, sway: .028 * buzz, turn: .5 * jolt, moving: t < 1,
+    left: { forward: -brace, lift: .02 * Math.abs(buzz), roll: 0, planted: true },
+    right: { forward: brace, lift: .02 * Math.abs(jolt), roll: 0, planted: true } };
 }
 
 // Blocked move: turn to face the attempted direction, lean in and rebound. The

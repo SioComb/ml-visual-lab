@@ -1,6 +1,6 @@
 import { project } from './maze-view.js';
-import { idlePose, tilePosition, headingForAction, shortestTurn, sampleMotion, celebratePose, stumblePose, bumpPose } from './robot-motion.js';
-import { robotMarkup } from './robot-view.js';
+import { idlePose, tilePosition, headingForAction, shortestTurn, sampleMotion, celebratePose, electrocutePose, bumpPose } from './robot-motion.js';
+import { robotMarkup, electrocuteFx } from './robot-view.js';
 
 // Presentation-only render/animation controller for the Q-learning maze agent.
 // It never advances the environment, selects actions, touches the Q-table or the
@@ -9,10 +9,10 @@ import { robotMarkup } from './robot-view.js';
 // the discrete state change into: turn -> walk cycle -> arrive -> idle.
 //
 //   Q-learning state transition (ui.js / worker.js, unchanged)
-//     -> sync({ state, action, ... })
+//     -> sync({ state, action, cells, ... })   Trap arrival is detected here
 //       -> turn towards the new heading, then walk one tile (sampleMotion)
-//       -> Goal: hop (celebratePose) / Trap: stumble (stumblePose) / wall: bump
-//       -> settle to idlePose (neutral)
+//       -> Goal: hop (celebratePose) / Trap: shock (electrocutePose + FX) / wall: bump
+//       -> settle to idlePose (neutral); the episode-end/reset flow is untouched
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const nextFrame = typeof requestAnimationFrame === 'function'
@@ -34,7 +34,10 @@ export function createRobotAnimator() {
   let segStart = 0;    // timestamp the head segment started
   let token;           // identity of the last transition object already handled
 
-  const paint = frame => { if (stage && frame) stage.innerHTML = robotMarkup(frame, project); };
+  const paint = (frame, fx) => {
+    if (!stage || !frame) return;
+    stage.innerHTML = (fx && fx.back || '') + robotMarkup(frame, project) + (fx && fx.front || '');
+  };
   const halt = () => { if (handle) dropFrame(handle); handle = 0; queue = []; };
 
   function settled(seg) {
@@ -47,12 +50,12 @@ export function createRobotAnimator() {
     const seg = queue[0];
     if (!seg) { handle = 0; return; }
     const p = seg.dur > 0 ? Math.min(1, (stamp - segStart) / seg.dur) : 1;
-    let frame;
+    let frame, fx = null;
     if (seg.type === 'walk') frame = sampleMotion(seg.from, seg.to, p);
     else if (seg.type === 'celebrate') frame = celebratePose(seg.pos, seg.yaw, p);
-    else if (seg.type === 'stumble') frame = stumblePose(seg.pos, seg.yaw, p);
+    else if (seg.type === 'electrocute') { frame = electrocutePose(seg.pos, seg.yaw, p, seg.calm); fx = electrocuteFx(seg, p, project); }
     else frame = bumpPose(seg.pos, seg.fromYaw, seg.toYaw, p);
-    paint(frame);
+    paint(frame, fx);
     pose = frame;
     if (p < 1) { handle = nextFrame(tick); return; }
     pose = settled(seg);
@@ -103,27 +106,37 @@ export function createRobotAnimator() {
     const dx = state % 5 - tile % 5, dy = Math.floor(state / 5) - Math.floor(tile / 5);
     const adjacent = Math.abs(dx) + Math.abs(dy) === 1;
     tile = state;
+    const arrival = opts.cells ? opts.cells[state] : '';
+    const heading = adjacent ? Math.atan2(dx, dy) : (pose ? pose.yaw : 0);
 
-    // Snap (no walk cycle) when animation is off, the OS asks for reduced motion,
-    // the change is not a fresh transition (reset / regenerate / lesson switch),
-    // or the jump spans more than one tile.
-    if (!opts.animate || reduced || !stepped || !adjacent) {
+    // Snap (no walk cycle) when animation is off, the change is not a fresh
+    // transition (reset / regenerate / lesson switch), or the jump spans more
+    // than one tile.
+    if (!opts.animate || !stepped || !adjacent) {
       halt();
-      pose = idlePose(spot, adjacent ? Math.atan2(dx, dy) : (pose ? pose.yaw : 0));
+      pose = idlePose(spot, heading);
       paint(pose);
+      return;
+    }
+
+    // Reduced motion: skip the walk cycle. Still play a short, low-motion cue
+    // for the Trap shock (flash + "-10" label) so the outcome stays legible.
+    if (reduced) {
+      halt();
+      pose = idlePose(spot, heading);
+      if (arrival === 'T') { queue = [{ type: 'electrocute', pos: spot, yaw: heading, tile: state, dur: 320, calm: true }]; run(); }
+      else paint(pose);
       return;
     }
 
     // Turn towards the heading, then walk one tile. sampleMotion keeps the turn
     // ahead of the travel, so a 90 degree change reads as "turn, then step".
-    const heading = Math.atan2(dx, dy);
     const from = { x: pose.x, y: pose.y, yaw: pose.yaw };
     const swing = shortestTurn(from.yaw, heading);
     const to = { x: spot.x, y: spot.y, yaw: from.yaw + swing };
     queue = [{ type: 'walk', from, to, dur: Math.abs(swing) > 0.35 ? 380 : 300 }];
-    const arrival = opts.cells ? opts.cells[state] : '';
     if (arrival === 'G') queue.push({ type: 'celebrate', pos: spot, yaw: to.yaw, dur: 480 });
-    else if (arrival === 'T') queue.push({ type: 'stumble', pos: spot, yaw: to.yaw, dur: 420 });
+    else if (arrival === 'T') queue.push({ type: 'electrocute', pos: spot, yaw: to.yaw, tile: state, dur: 520 });
     run();
   }
 
