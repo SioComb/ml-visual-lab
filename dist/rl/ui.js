@@ -11,9 +11,9 @@ const $ = id => document.getElementById(id);
 const numberField = (id, label, value, min, max, step = 1) => `<label for="rl-${id}">${label}</label><input id="rl-${id}" type="number" value="${value}" min="${min}" max="${max}" step="${step}" required>`;
 const selectField = (id, label, entries) => `<label for="rl-${id}">${label}</label><select id="rl-${id}">${Object.entries(entries).map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select>`;
 const lessons = {
-  bandit: ['01', '多腕バンディット', 'どのスロットを選ぶと報酬が増える？', 'εを0から0.3に変え、同じSeedで比較してみましょう。探索すると未知のアームを試せますが、その瞬間の報酬を逃すこともあります。Greedyは推定値のみ、UCBは推定値と不確実性で選びます。'],
+  bandit: ['01', 'バンディット', 'どのスロットを選ぶと報酬が増える？', 'εを0から0.3に変え、同じSeedで比較してみましょう。探索すると未知のアームを試せますが、その瞬間の報酬を逃すこともあります。Greedyは推定値のみ、UCBは推定値と不確実性で選びます。'],
   maze: ['02', 'Q-learning迷路', '目先の報酬から、Goalまでの行動を学ぶ。', 'バンディットのε-Greedyを、今度は各マスの行動選択に使います。探索はランダムな方向、活用は最大Q値の方向です。αは更新の大きさ、γは将来の報酬の重み。εを上げると探索が増えます。'],
-  snake: ['03', 'Snake', '状態が増えたら、何を覚えればよい？', '迷路は25状態ですが、Snakeは頭・体・Foodの配置で状態が急増します。ここでは4方向の危険、Foodの相対方向、進行方向に圧縮した最大576状態でQ-learningを行います。同じ特徴でも体の配置は異なり、最適行動を区別できない限界があります。'],
+  snake: ['03', 'ヘビゲーム', 'どの方向へ進めば、もっと長く生き残れる？', 'ヘビゲームは状態の組み合わせが多すぎるため、盤面をそのままQ-learningで学習するのは現実的ではありません。そこで、周囲の危険・りんごの方向・進行方向だけを状態として使い、Q-tableで扱える大きさまで情報を圧縮しています。'],
 };
 // Per-algorithm copy for the Bandit lesson. UCB has no ε, so its text and
 // formula drop the ε wording entirely and describe the exploration bonus.
@@ -195,8 +195,8 @@ export function initReinforcement() {
         $('rl-legend').textContent = 'S: Start / ◎: Goal +10 / ■: Wall / ⚠: Trap −10 / 🤖: Agent。通常移動・壁への試行 −0.1。矢印は現在のQ値に基づく方策です。';
       } else {
         $('rl-board').innerHTML = snakeView(env);
-        $('rl-detail').innerHTML = `<h3>状態を小さく表現する</h3><div class="rl-flow">4方向の危険 + Foodの方向 + 進行方向<br>↓<br>Q-table（最大576行 × 4行動）<br>↓<br>ε-Greedy → 行動</div><p>学習した状態：<strong>${Object.keys(snapshot.table).length}</strong> / 576</p><h3>DQNでは何が変わる？</h3><p>表に保存するQ値をニューラルネットワークで近似します。この教材は簡略状態のQ-learning版で、DQNは使用していません。</p>`;
-        $('rl-legend').textContent = '● Food +10 / 壁・体への衝突 −10 / 通常移動 −0.1。Foodを取ると1マス伸びます。即時の逆向き移動も体への衝突です。';
+        $('rl-detail').innerHTML = `<h3>なぜEpisodeを増やしても成績が伸びない？</h3><p>Episodeを増やせば、Q値の推定は少しずつ安定していきます。一方で、ヘビの体の形や細かな位置関係は状態に含まれていません。そのため、Q-tableが十分に学習された後は、Episodeを増やしても大きな改善が起こりにくくなります。</p><p class="field-help">状態数の内訳：危険4方向（各「危険 / 安全」→ 2⁴ = 16）× りんごの相対方向（横3 × 縦3 = 9）× 進行方向（4）＝ 576</p><p>学習した状態：<strong>${Object.keys(snapshot.table).length}</strong> / 576</p>`;
+        $('rl-legend').textContent = '● りんご +10 / 壁・体への衝突 −10 / 通常移動 −0.1。りんごを取ると1マス伸びます。即時の逆向き移動も体への衝突です。';
       }
       $('rl-charts').innerHTML = learningCharts(snapshot.history, kind);
       $('rl-progress').textContent = '完了した学習Episodeを表示。上限で打ち切った回も含みます。Evaluationは学習グラフに含めません。';
