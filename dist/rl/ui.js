@@ -162,7 +162,7 @@ export function initReinforcement() {
     $('rl-shuffle').hidden = !isBandit;
     $('rl-algorithm-name').textContent = isBandit ? `使用中：${BANDIT_NAMES[config.algorithm]}` : `使用中：Q-learning + ε-Greedy${evaluation ? '（再生はε=0）' : ''}`;
     const last = isBandit ? bandit.last : evaluation ? evaluation.last : snapshot.last;
-    $('rl-action').textContent = last ? `${isBandit ? 'アーム ' + String.fromCharCode(65 + last.action) : '行動 ' + DIRECTIONS[last.action]} · ${last.reason ?? (last.exploring ? '探索 Exploration' : '活用 Exploitation')} · Reward ${last.reward.toFixed(1)}` : evaluation ? '学習済みのQ値で、最初の行動を選びます。' : '1ステップで、最初の行動を見てみましょう。';
+    $('rl-action').textContent = last ? `${isBandit ? 'アーム ' + String.fromCharCode(65 + last.action) : '行動 ' + DIRECTIONS[last.action]} · ${last.reason ?? (last.exploring ? '探索 Exploration' : '活用 Exploitation')} · Reward ${last.reward.toFixed(1)}` : evaluation ? '学習済みのQ値で、最初の行動を選びます。' : 'まずは1ステップずつ動かして、最初の行動を見てみましょう。';
     if (isBandit) {
       $('rl-metrics').innerHTML = metric('試行', bandit.history.length, `/ ${config.limit}`) + metric('累積報酬', bandit.total) + metric('平均報酬', (bandit.total / (bandit.history.length || 1)).toFixed(3));
       $('rl-board').innerHTML = banditView(bandit, $('rl-reveal').checked);

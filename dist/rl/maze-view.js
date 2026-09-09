@@ -40,10 +40,6 @@ function star(cx, cy, radius) {
     return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
   });
 }
-function tree(x, y, scale) {
-  return `<g transform="translate(${x} ${y}) scale(${scale})" opacity=".65"><ellipse cx="5" cy="5" rx="22" ry="7" fill="#6d977d" opacity=".2"/><path d="M0 0L0-33" stroke="#8ba187" stroke-width="6"/><circle cx="0" cy="-42" r="21" fill="url(#maze-leaves)"/><circle cx="-12" cy="-39" r="14" fill="#b4cda0"/><circle cx="10" cy="-49" r="14" fill="#d0dfb8"/></g>`;
-}
-
 export function mazeDiorama(env, table, selected, policy) {
   let scene = `<svg class="rl-diorama-scene" viewBox="0 ${TOP} ${WIDTH} ${HEIGHT}" aria-hidden="true"><defs>
     <linearGradient id="maze-floor" x2=".3" y2="1"><stop stop-color="#fffdf4"/><stop offset="1" stop-color="#e7e3d6"/></linearGradient>
@@ -56,12 +52,15 @@ export function mazeDiorama(env, table, selected, policy) {
     <radialGradient id="maze-blue" cx=".3" cy=".2"><stop stop-color="#c7fbff"/><stop offset=".4" stop-color="#6acfe8"/><stop offset="1" stop-color="#328faf"/></radialGradient>
     <linearGradient id="maze-gold" x2=".5" y2="1"><stop stop-color="#fff3a2"/><stop offset=".5" stop-color="#ffd35c"/><stop offset="1" stop-color="#e4a627"/></linearGradient>
     <linearGradient id="maze-trap" x2=".2" y2="1"><stop stop-color="#ffb6a2"/><stop offset="1" stop-color="#e06b5d"/></linearGradient>
-    <radialGradient id="maze-leaves" cx=".25" cy=".15"><stop stop-color="#d7e5bc"/><stop offset="1" stop-color="#90b28e"/></radialGradient>
-    <radialGradient id="maze-ground"><stop stop-color="#c6dbcd" stop-opacity=".8"/><stop offset="1" stop-color="#eaf2e8" stop-opacity="0"/></radialGradient>
     <filter id="maze-soft" x="-50%" y="-80%" width="200%" height="260%"><feGaussianBlur stdDeviation="4"/></filter>
-  </defs><ellipse cx="350" cy="360" rx="343" ry="279" fill="url(#maze-ground)"/>
-  ${tree(95, 211, 1.2)}${tree(201, 148, .8)}${tree(520, 163, 1.1)}${tree(611, 289, .9)}${tree(58, 410, 1)}
-  <ellipse cx="355" cy="551" rx="278" ry="48" fill="#355d51" opacity=".18" filter="url(#maze-soft)"/>`;
+    <filter id="maze-cast" x="-45%" y="-70%" width="190%" height="260%"><feGaussianBlur stdDeviation="9"/></filter>
+    <clipPath id="maze-stage"><rect x="0" y="${TOP}" width="${WIDTH}" height="${HEIGHT}"/></clipPath>
+  </defs>
+  <rect x="0" y="${TOP}" width="${WIDTH}" height="${HEIGHT}" fill="#ffffff"/>
+  <g clip-path="url(#maze-stage)">
+    <ellipse cx="352" cy="558" rx="286" ry="34" fill="#33505a" opacity=".16" filter="url(#maze-cast)"/>
+    <ellipse cx="352" cy="565" rx="220" ry="16" fill="#2b424b" opacity=".13" filter="url(#maze-soft)"/>
+  </g>`;
   scene += block(-.23, -.23, 5.46, 5.46, -.56, -.08, '#9daf9e', 'url(#maze-frame-front)', '#577f73');
   // Rim strips are actual raised prisms rather than a CSS shadow around a grid.
   scene += block(-.23, -.23, 5.46, .18, -.08, .19, 'url(#maze-frame)', '#81988a', '#779386');
