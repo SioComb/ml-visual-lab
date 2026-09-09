@@ -1,4 +1,4 @@
-import { project } from './maze-view.js';
+import { project } from './diorama.js';
 import { idlePose, tilePosition, headingForAction, shortestTurn, sampleMotion, celebratePose, electrocutePose, bumpPose } from './robot-motion.js';
 import { robotMarkup, electrocuteFx } from './robot-view.js';
 

@@ -23,13 +23,11 @@ export function banditView(bandit, reveal) {
   }).join('')}</div>`;
 }
 export { mazeDiorama as mazeView } from './maze-view.js';
+export { snakeDiorama as snakeView } from './snake-view.js';
 export function qDetails(table, selected, cells, last) {
   const values = table[selected] ?? [0, 0, 0, 0], best = bestActions(values);
   const terminal = ['#', 'G', 'T'].includes(cells[selected]);
   return `<h3>選択中：S${selected}</h3><p class="field-help">${terminal ? '終端または壁のため、行動価値を学習しません。' : '緑は最大Q値。同値の場合は複数の方向が候補になります。'}</p><div class="rl-q-values">${values.map((v, a) => `<div class="${!terminal && best.includes(a) ? 'best' : ''}">${DIRECTIONS[a]}<strong>${v.toFixed(3)}</strong></div>`).join('')}</div><h3>Q-table <small>25 states × 4 actions</small></h3><div class="rl-table-scroll"><table><thead><tr><th>State</th>${DIRECTIONS.map(d => `<th>${d}</th>`).join('')}</tr></thead><tbody>${[...cells].map((cell, i) => `<tr class="${i === selected ? 'selected' : ''}"><th>S${i}${cell !== '.' ? ' ' + cell : ''}</th>${(table[i] ?? [0, 0, 0, 0]).map((v, a) => `<td class="${last?.state === i && last?.action === a ? 'rl-updated' : ''}">${v.toFixed(2)}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="field-help">黄色：直近に更新した値</p>`;
-}
-export function snakeView(env) {
-  return `<div class="rl-snake" style="--size:${env.size}" role="img" aria-label="Snake盤面。Score ${env.score}、長さ ${env.body.length}">${Array.from({ length: env.size ** 2 }, (_, i) => `<div class="${env.body[0] === i ? 'head' : env.body.includes(i) ? 'body' : i === env.food ? 'food' : ''}">${env.body[0] === i ? DIRECTIONS[env.direction] : i === env.food ? '●' : ''}</div>`).join('')}</div>`;
 }
 export function learningCharts(history, kind) {
   return chart(history, 'reward', 'Episodeごとの累積報酬', true) + chart(history, 'steps', kind === 'maze' ? 'Episodeごとのstep数' : '生存step数', true) + (kind === 'snake' ? chart(history, 'score', 'Scoreと平均Score', true) : '');
