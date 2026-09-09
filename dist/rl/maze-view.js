@@ -4,8 +4,8 @@ import { DIRECTIONS } from './maze.js';
 // A small perspective renderer, independent of the learning environment.
 // x/y are grid coordinates; z is height above the floor. The camera looks
 // down from the front of the board. Native buttons share this projection.
-const WIDTH = 700, HEIGHT = 570, TOP = 55;
-function project(x, y, z = 0) {
+export const WIDTH = 700, HEIGHT = 570, TOP = 55;
+export function project(x, y, z = 0) {
   const depth = 14 - (y - 2.5) * 0.572 - z * 0.820;
   return [350 + (x - 2.5) * 1330 / depth, 310 + ((y - 2.5) * 0.820 - z * 0.572) * 1330 / depth];
 }
@@ -33,23 +33,6 @@ function block(x, y, width, length, bottom, top, surface, front, side, bevel = '
 function groundText(x, y, text, extra = '') {
   const p = project(x, y, 0.13);
   return `<text x="${p[0]}" y="${p[1]}" text-anchor="middle" ${extra}>${text}</text>`;
-}
-function robot(x, y) {
-  const [px, py] = project(x, y, 0.15), scale = 0.9 + y * 0.055;
-  return `<g transform="translate(${px} ${py}) scale(${scale})" class="rl-diorama-robot">
-    <ellipse cx="3" cy="5" rx="29" ry="10" fill="#27463b" opacity=".23" filter="url(#maze-soft)"/>
-    <path d="M-15-10Q-23-5-19 4Q-15 9-8 4L-4-10M8-10Q4 1 11 6Q21 9 23 1L18-13" fill="url(#maze-ceramic)" stroke="#afc1bd"/>
-    <path d="M-18-33Q-27-34-29-19Q-29-12-23-12L-16-25M17-34Q28-31 29-18Q28-12 22-14L15-26" fill="url(#maze-ceramic)" stroke="#b2c6bf"/>
-    <path d="M-17-35Q0-43 17-34L16-13Q0-4-16-14Z" fill="url(#maze-ceramic)" stroke="#b1c6c0"/>
-    <ellipse cx="0" cy="-24" rx="7" ry="5" fill="#c1d7d1"/><circle cx="0" cy="-24" r="2.7" fill="#2b9c92"/>
-    <path d="M-24-60Q-25-68-14-72L11-75Q26-73 27-62L28-41Q25-30 13-29L-13-27Q-26-28-26-40Z" fill="url(#maze-ceramic)" stroke="#a8beb8" stroke-width="1.2"/>
-    <path d="M-23-60Q-16-69-6-69L13-72Q22-70 24-64" fill="none" stroke="#ffffff" stroke-width="3" opacity=".9"/>
-    <path d="M-17-57Q-17-62-10-63L12-66Q21-66 21-59L22-46Q21-37 13-36L-8-34Q-18-35-18-43Z" fill="url(#maze-screen)" stroke="#7eafb1" stroke-width="2"/>
-    <ellipse cx="-7" cy="-48" rx="3.2" ry="4.5" fill="#75edff"/><ellipse cx="11" cy="-50" rx="3.2" ry="4.5" fill="#75edff"/>
-    <path d="M-3-41Q2-38 7-42" fill="none" stroke="#72d4e7" stroke-width="1.4" stroke-linecap="round"/>
-    <ellipse cx="-26" cy="-48" rx="3" ry="7" fill="#72aabe"/>
-    <path d="M1-74L-1-84" stroke="#728f9c" stroke-width="3"/><circle cx="-1" cy="-87" r="4" fill="url(#maze-blue)" stroke="#328cac"/>
-  </g>`;
 }
 function star(cx, cy, radius) {
   return Array.from({ length: 10 }, (_, i) => {
@@ -112,7 +95,6 @@ export function mazeDiorama(env, table, selected, policy) {
         scene += `<path d="M${tx} ${ty - 20}l-16 28q16 6 32 0Z" fill="#c53b31" stroke="#ffdad0" stroke-width="1.8" stroke-linejoin="round"/><text x="${tx}" y="${ty + 4}" class="rl-diorama-warning">!</text>`;
       }
       scene += groundText(x + .18, y + .18, `S${i}${cell === 'S' ? ' · Start' : ''}`, 'class="rl-diorama-state"');
-      if (agent) scene += robot(x + .5, y + .51);
     }
     scene += '</g>';
     // Transparent native buttons retain click, Tab/Enter/Space and focus behavior.
@@ -127,6 +109,10 @@ export function mazeDiorama(env, table, selected, policy) {
     const clip = polygon.map(([px, py]) => `${(px - minX) / w * 100}% ${(py - minY) / h * 100}%`).join(',');
     buttons.push(`<button type="button" class="rl-diorama-hit" data-state="${i}" aria-pressed="${i === selected}" aria-label="S${i} ${label}${agent ? ' Agent' : ''}" ${cell === '#' ? 'disabled' : ''} style="left:${minX / WIDTH * 100}%;top:${(minY - TOP) / HEIGHT * 100}%;width:${w / WIDTH * 100}%;height:${h / HEIGHT * 100}%;clip-path:polygon(${clip});z-index:${i + 1}"><span class="sr-only">S${i} ${label}</span></button>`);
   }
+  // Mount point for the animated agent. robot-animator.js fills this <g> with the
+  // articulated rig each frame; keeping it empty here means the learning render
+  // stays a pure function of the environment, independent of animation state.
+  scene += '<g class="rl-robot-stage"></g>';
   scene += block(-.23, -.05, .18, 5.28, -.08, .19, 'url(#maze-frame)', '#7c9f90', '#668b7c');
   scene += block(5.05, -.05, .18, 5.28, -.08, .19, 'url(#maze-frame)', '#7c9f90', '#668b7c');
   scene += block(-.23, 5.05, 5.46, .18, -.08, .19, 'url(#maze-frame)', '#779c89', '#668b7c');

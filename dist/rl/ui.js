@@ -5,6 +5,7 @@ import { environment, TrainingSession } from './session.js';
 import { random } from './random.js';
 import { chart } from './charts.js';
 import { metric, banditView, mazeView, qDetails, snakeView, learningCharts } from './views.js';
+import { createRobotAnimator } from './robot-animator.js';
 
 const $ = id => document.getElementById(id);
 const numberField = (id, label, value, min, max, step = 1) => `<label for="rl-${id}">${label}</label><input id="rl-${id}" type="number" value="${value}" min="${min}" max="${max}" step="${step}" required>`;
@@ -20,6 +21,7 @@ export function initReinforcement() {
   let bandit, config, selected = 0, evaluation = null, pendingPlay = false, active = false;
   let comparisons = [];
   const root = $('reinforcement');
+  const robotAnimator = createRobotAnimator();
   root.innerHTML = `<nav class="rl-lessons" aria-label="強化学習の学習順序">${Object.entries(lessons).map(([key, [n, name]]) => `<button class="quiet" data-lesson="${key}" aria-pressed="false"><span>${n}</span> ${name}</button>`).join('<span class="rl-next" aria-hidden="true">→</span>')}</nav><div class="workspace rl-workspace"><aside class="settings"><section class="setting-section"><div class="section-title"><span class="step">01</span><h2>実験を設定する</h2></div><div id="rl-fields"></div><p class="field-help">速度以外の設定変更は学習をリセットします。同じSeed・設定で再現できます。</p></section><div class="train-area"><button id="rl-step" class="quiet">1ステップ</button><button id="rl-run" class="primary">▶ 自動実行</button><button id="rl-pause" class="quiet">一時停止</button><button id="rl-play" class="quiet">▷ Play / Evaluation</button><button id="rl-reset" class="quiet">リセット</button></div></aside><div class="results"><div class="result-heading"><div><div class="eyebrow">REINFORCEMENT LEARNING</div><h2 id="rl-title"></h2><p id="rl-subtitle"></p></div><span id="rl-status" class="status" role="status" aria-live="polite">準備完了</span></div><section class="panel rl-intro"><strong id="rl-algorithm"></strong><p id="rl-explanation"></p></section><div class="metrics rl-metrics" id="rl-metrics"></div><div class="rl-environment-grid"><section class="panel"><div class="rl-panel-heading"><h3>環境と行動</h3><label class="check" id="rl-overlay-label"><input id="rl-overlay" type="checkbox" checked> 方策を重ねる</label><label class="check" id="rl-reveal-label"><input id="rl-reveal" type="checkbox"> 真の確率を表示</label></div><div id="rl-board"></div><p id="rl-action" class="rl-action"></p><p id="rl-legend" class="field-help"></p></section><section class="panel" id="rl-detail"></section></div><section class="panel rl-learning"><h3>学習の結果</h3><p id="rl-progress" class="field-help"></p><div class="rl-charts" id="rl-charts"></div><div id="rl-comparison"></div></section><section class="panel rl-reading"><div class="eyebrow">READ THE LEARNING</div><h3>学習と再生を見比べよう</h3><p id="rl-reading"></p><p id="rl-update" class="rl-formula"></p></section></div></div>`;
 
   function settings() {
@@ -71,6 +73,7 @@ export function initReinforcement() {
     config = next;
     worker?.terminate(); worker = null;
     evaluation = null; selected = 0;
+    robotAnimator.reset();
     if (kind === 'bandit') bandit = new Bandit(config);
     else {
       snapshot = new TrainingSession(kind, config).snapshot();
@@ -155,6 +158,14 @@ export function initReinforcement() {
       $('rl-detail').hidden = false;
       if (kind === 'maze') {
         $('rl-board').innerHTML = mazeView(env, snapshot.table, selected, $('rl-overlay').checked);
+        // Hand the fresh scene to the animation controller. Walk during Play /
+        // Evaluation and manual single steps; snap during fast auto-training.
+        robotAnimator.sync({
+          scene: $('rl-board').querySelector('.rl-diorama-scene'),
+          state: env.position, cells: env.cells,
+          action: last?.action, token: last,
+          animate: Boolean(evaluation) || !running,
+        });
         $('rl-detail').innerHTML = qDetails(snapshot.table, selected, env.cells, snapshot.last);
         $('rl-legend').textContent = 'S: Start / ◎: Goal +10 / ■: Wall / ⚠: Trap −10 / 🤖: Agent。通常移動・壁への試行 −0.1。矢印は現在のQ値に基づく方策です。';
       } else {
@@ -201,6 +212,6 @@ export function initReinforcement() {
   lesson(kind);
   return {
     show() { active = true; root.hidden = false; render(); },
-    hide() { active = false; stop(); $('rl-status').textContent = '一時停止'; render(); root.hidden = true; },
+    hide() { active = false; stop(); robotAnimator.reset(); $('rl-status').textContent = '一時停止'; render(); root.hidden = true; },
   };
 }
