@@ -3,6 +3,7 @@ import { sample, parseCSV, numeric } from './ml.js';
 import { renderPreprocessing, processedCSVRows } from './preprocessing-ui.js';
 import { modelOverlay, renderClustering, drawClusters } from './visuals.js';
 import { initReinforcement } from './rl/ui.js';
+import { initAssociation } from './association/ui.js';
 import { $, esc } from './shared/dom.js';
 import { downloadCSV } from './shared/download.js';
 const palette = [
@@ -712,9 +713,6 @@ async function importFile(file) {
     $('file').value = '';
   }
 }
-$('regTask').onclick = () => switchTask('regression');
-$('clsTask').onclick = () => switchTask('classification');
-$('clusterTask').onclick = () => switchTask('clustering');
 function switchTask(next) {
   if (task === next) return;
   task = next;
@@ -863,27 +861,61 @@ $('downloadProcessed').onclick = () => {
   if (result && !dirty && !busy)
     download('ml-preprocessed.csv', processedCSVRows(result));
 };
-populateMode();
-run();
-
-// RL has its own controls and worker; existing dataset/model state is preserved.
-let reinforcement = null;
-$('rlTask').onclick = () => {
-  reinforcement ??= initReinforcement();
-  $('supervisedWorkspace').hidden = true;
-  reinforcement.show();
-  for (const id of ['regTask', 'clsTask', 'clusterTask', 'rlTask']) {
-    $(id).classList.toggle('active', id === 'rlTask');
-    $(id).setAttribute('aria-pressed', id === 'rlTask');
-  }
+// Each lab owns its state and worker. Navigation mounts optional labs once,
+// hides them when leaving, and keeps the URL and all five buttons in sync.
+const viewButtons = {
+  regression: 'regTask',
+  classification: 'clsTask',
+  clustering: 'clusterTask',
+  reinforcement: 'rlTask',
+  association: 'assocTask',
 };
-for (const id of ['regTask', 'clsTask', 'clusterTask']) {
-  $(id).addEventListener('click', () => {
-    reinforcement?.hide();
-    $('supervisedWorkspace').hidden = false;
-    $('rlTask').classList.remove('active');
-    $('rlTask').setAttribute('aria-pressed', false);
-    $(id).classList.add('active');
-    $(id).setAttribute('aria-pressed', true);
-  });
+let activeView = null,
+  reinforcement = null,
+  association = null;
+
+function viewFromHash() {
+  const view = location.hash.slice(1);
+  return Object.hasOwn(viewButtons, view) ? view : 'regression';
 }
+
+function activateView(next, syncHistory = true) {
+  if (next === activeView) return;
+  if (activeView === 'reinforcement') reinforcement.hide();
+  if (activeView === 'association') association.hide();
+  if (busy && next === 'association') markDirty();
+
+  const existing = ['regression', 'classification', 'clustering'].includes(
+    next,
+  );
+  $('supervisedWorkspace').hidden = !existing;
+  if (next === 'association') {
+    association ??= initAssociation();
+    association.show();
+  } else if (next === 'reinforcement') {
+    reinforcement ??= initReinforcement();
+    reinforcement.show();
+  } else {
+    switchTask(next);
+    // The default sample is trained when its lab is first shown, including
+    // when the page was initially opened on an association deep link.
+    if (!result && !dirty && !busy && dataset.synthetic) run();
+  }
+  activeView = next;
+  for (const [view, id] of Object.entries(viewButtons)) {
+    $(id).classList.toggle('active', view === next);
+    $(id).setAttribute('aria-pressed', String(view === next));
+  }
+  if (syncHistory && location.hash !== `#${next}`) {
+    history.pushState(null, '', `#${next}`);
+  }
+}
+
+for (const [view, id] of Object.entries(viewButtons)) {
+  $(id).onclick = () => activateView(view);
+}
+window.addEventListener('hashchange', () =>
+  activateView(viewFromHash(), false),
+);
+populateMode();
+activateView(viewFromHash(), false);

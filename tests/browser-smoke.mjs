@@ -18,7 +18,7 @@ const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 await mkdir('.cache/qa/screenshots', { recursive: true });
 async function waitForText(selector, value) { await page.locator(selector).filter({ hasText: value }).waitFor(); }
-async function trainExisting() { await page.locator('#train:not([disabled])').waitFor(); assert.ok(await page.locator('#mainPlot circle').count() > 0); }
+async function trainExisting() { await page.locator('#train:not([disabled])').waitFor(); await page.locator('#mainPlot circle').first().waitFor(); }
 async function number(id, value) { await page.locator('#rl-' + id).fill(String(value)); await page.locator('#rl-' + id).press('Tab'); }
 try {
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
@@ -107,12 +107,14 @@ try {
   await number('limit', 100);
   await page.locator('#rl-speed').selectOption('50');
   await page.locator('#rl-run').click(); await waitForText('#rl-status', '学習完了');
-  assert.equal(await page.locator('.rl-snake > div').count(), 64);
+  assert.match(await page.locator('#rl-board [role="img"]').getAttribute('aria-label'), /立体Snake盤面。Score \d+、長さ \d+/);
+  assert.equal(await page.locator('#rl-board svg').count(), 1);
   await page.locator('#rl-play').click(); await waitForText('#rl-status', 'Evaluation');
   await page.screenshot({ path: '.cache/qa/screenshots/snake.png', fullPage: true });
   await page.locator('#rl-pause').click();
   await page.locator('#rl-reset').click();
-  assert.equal(await page.locator('.rl-snake .body').count(), 2);
+  // The accessible length includes the head and the two initial body segments.
+  assert.match(await page.locator('#rl-board [role="img"]').getAttribute('aria-label'), /Score 0、長さ 3$/);
   await page.setViewportSize({ width: 390, height: 844 });
   for (const kind of ['bandit', 'maze', 'snake']) {
     await page.locator(`[data-lesson="${kind}"]`).click();

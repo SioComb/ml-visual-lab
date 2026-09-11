@@ -11,7 +11,9 @@
       >ML Visual Lab | 見てわかる機械学習</title
     ><link rel="stylesheet" href="./style.css" /><link
       rel="stylesheet"
-      href="./rl/style.css"
+      href="./rl/style.css" /><link
+      rel="stylesheet"
+      href="./association/style.css"
   /></head>
   <body>
     <header class="topbar"
@@ -39,11 +41,9 @@
             ><span>⋈</span> 教師なし <small>クラスタリング</small></button
           ><button id="rlTask" aria-pressed="false"
             ><span>↻</span> 強化学習 <small>報酬から行動を学ぶ</small></button
-          ><a
-            class="application-link"
-            href="./association.html"
-            aria-label="購買パターン探索：Apriori・Eclat・FP-Growthの実験ページへ"
-            ><span>⋄</span> 購買パターン <small>応用 · Apriori ほか</small></a
+          ><button id="assocTask" type="button" aria-pressed="false"
+            ><span>⋄</span> 購買パターン
+            <small>応用 · Apriori ほか</small></button
           ></div
         ></section
       >
@@ -346,6 +346,12 @@
         id="reinforcement"
         hidden
         aria-label="強化学習 / Reinforcement Learning"
+      ></section
+      ><section
+        id="association"
+        class="association-page"
+        hidden
+        aria-label="購買パターン探索 / Association Mining"
       ></section
       ><footer
         ><span><b>ML Visual Lab</b> · 学んで、変えて、確かめる。</span

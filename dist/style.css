@@ -1258,40 +1258,6 @@ dialog li p,
   width: 100%;
   margin-top: 10px;
 }
-.task-switch .application-link {
-  display: block;
-  flex: 1;
-  min-width: 128px;
-  padding: 9px 15px;
-  border-radius: 7px;
-  text-decoration: none;
-  color: var(--ink);
-  font-size: 16px;
-  font-weight: 650;
-  line-height: 1.4;
-}
-.task-switch .application-link:hover {
-  background: var(--mint);
-}
-.task-switch .application-link > span {
-  font-size: 19px;
-  padding-right: 5px;
-}
-.task-switch .application-link small {
-  font-weight: 400;
-}
-@media (max-width: 760px) {
-  .task-switch .application-link {
-    min-width: 0;
-    padding: 10px 5px;
-    font-size: 14px;
-    text-align: center;
-  }
-  .task-switch .application-link > span {
-    font-size: 17px;
-    padding-right: 3px;
-  }
-}
 
 .preprocessing-controls {
   margin: 18px 0;
@@ -1394,4 +1360,9 @@ dialog li p,
 }
 .task-switch button {
   flex: 1;
+}
+@media (max-width: 760px) {
+  .task-switch:has(#assocTask) button {
+    flex: 1 1 100px;
+  }
 }

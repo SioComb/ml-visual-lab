@@ -1,9 +1,5 @@
 /* Feature styles are scoped so loading this sheet cannot restyle other labs. */
 
-:where(.association-page) .back-link {
-  text-decoration: none;
-  color: var(--ink);
-}
 :where(.association-page) .association-badge {
   display: inline-block;
   color: var(--green);
@@ -344,9 +340,5 @@
   }
   :where(.association-page) .association-badge {
     font-size: 11px;
-  }
-  :where(.association-page) .page-heading .eyebrow {
-    font-size: 10px;
-    letter-spacing: 1px;
   }
 }
