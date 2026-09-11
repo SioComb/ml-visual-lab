@@ -179,6 +179,14 @@ npm test
 
 Windows PowerShellで `npm.ps1` が実行ポリシーによりブロックされる場合は、`npm.cmd run check` を使ってください。
 
+ソースの整形は必要なときだけ固定バージョンのPrettierで実行できます。サイトの実行にパッケージのインストールは不要です。HTML内の空白とJavaScript内の埋め込みテンプレートを保つ設定を使います。
+
+```sh
+npx --yes prettier@3.6.2 --write "dist/**/*.{js,html,css}" --single-quote --html-whitespace-sensitivity strict --embedded-language-formatting off
+```
+
+DOM取得・HTMLエスケープは `dist/shared/dom.js`、CSVファイルのダウンロードは `dist/shared/download.js` に集約しています。CSVの組み立ては各機能が担当します。共通スタイルは `dist/style.css`、各実験のスタイルは機能別のCSSに置き、購買パターンのスタイルは `.association-page` 内に限定しています。
+
 テストでは既存の回帰・分類・クラスタリング全10モデル、One-hotと3種類のスケーリング、Banditの3手法、迷路のQ値更新・全プリセットのGoal到達・再現性、Snakeの餌・壁・体・末尾・盤面クリア・学習、Workerの停止・再開・リセットを確認します。
 
 画面テストも実行する場合だけ、任意の検証用依存をGit管理対象外のキャッシュへ入れます。配信サイトの依存は増えません。

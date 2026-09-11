@@ -9,12 +9,17 @@ export class QLearner {
     this.actions = actions;
     this.table = {};
   }
-  values(state) { return this.table[state] ?? Array(this.actions).fill(0); }
-  select(state, epsilon, rng) { return choose(this.values(state), epsilon, rng); }
+  values(state) {
+    return this.table[state] ?? Array(this.actions).fill(0);
+  }
+  select(state, epsilon, rng) {
+    return choose(this.values(state), epsilon, rng);
+  }
   update({ state, action, reward, nextState, done }) {
-    const values = this.table[state] ??= Array(this.actions).fill(0);
+    const values = (this.table[state] ??= Array(this.actions).fill(0));
     const before = values[action];
-    const target = reward + (done ? 0 : this.gamma * Math.max(...this.values(nextState)));
+    const target =
+      reward + (done ? 0 : this.gamma * Math.max(...this.values(nextState)));
     values[action] += this.alpha * (target - before);
     return { state, action, reward, before, target, after: values[action] };
   }

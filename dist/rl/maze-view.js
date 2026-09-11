@@ -1,11 +1,25 @@
 import { bestActions } from './random.js';
 import { DIRECTIONS } from './maze.js';
-import { WIDTH, HEIGHT, TOP, project, face, roundedFace, corners, block, groundText, stageOpen, tray, trayRims } from './diorama.js';
+import {
+  WIDTH,
+  HEIGHT,
+  TOP,
+  project,
+  face,
+  roundedFace,
+  corners,
+  block,
+  groundText,
+  stageOpen,
+  tray,
+  trayRims,
+} from './diorama.js';
 
 // Star marker for the reached Goal tile.
 function star(cx, cy, radius) {
   return Array.from({ length: 10 }, (_, i) => {
-    const angle = -Math.PI / 2 + i * Math.PI / 5, r = i % 2 ? radius * 0.48 : radius;
+    const angle = -Math.PI / 2 + (i * Math.PI) / 5,
+      r = i % 2 ? radius * 0.48 : radius;
     return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
   });
 }
@@ -28,47 +42,130 @@ export function mazeDiorama(env, table, selected, policy) {
   scene += tray('url(#maze-frame)', 'url(#maze-frame-front)');
   const buttons = [];
   for (let i = 0; i < env.cells.length; i++) {
-    const cell = env.cells[i], x = i % 5, y = Math.floor(i / 5), agent = env.position === i;
-    const label = { S: 'Start', G: 'Goal', T: 'Trap', '#': 'Wall', '.': '' }[cell];
+    const cell = env.cells[i],
+      x = i % 5,
+      y = Math.floor(i / 5),
+      agent = env.position === i;
+    const label = { S: 'Start', G: 'Goal', T: 'Trap', '#': 'Wall', '.': '' }[
+      cell
+    ];
     const stateClass = `${cell === '#' ? 'wall' : cell === 'G' ? 'goal' : cell === 'T' ? 'trap' : ''} ${i === selected ? 'selected' : ''}`;
     scene += `<g class="rl-diorama-tile ${stateClass}">`;
-    scene += block(x + .025, y + .025, .95, .95, -.075, .035, 'url(#maze-floor)', '#b7baaa', '#ced0c0', '#ffffffc0');
+    scene += block(
+      x + 0.025,
+      y + 0.025,
+      0.95,
+      0.95,
+      -0.075,
+      0.035,
+      'url(#maze-floor)',
+      '#b7baaa',
+      '#ced0c0',
+      '#ffffffc0',
+    );
     if (cell === '#') {
-      scene += face(corners(x + .14, y + .20, .87, .92, .04), '#314d4650');
-      scene += block(x + .09, y + .09, .82, .82, .045, .66, 'url(#maze-wall)', 'url(#maze-wall-front)', '#364f57', '#a5b6b780');
+      scene += face(corners(x + 0.14, y + 0.2, 0.87, 0.92, 0.04), '#314d4650');
+      scene += block(
+        x + 0.09,
+        y + 0.09,
+        0.82,
+        0.82,
+        0.045,
+        0.66,
+        'url(#maze-wall)',
+        'url(#maze-wall-front)',
+        '#364f57',
+        '#a5b6b780',
+      );
     } else {
       if (cell === 'G' || cell === 'T') {
-        scene += block(x + .07, y + .07, .86, .86, .04, .18, cell === 'G' ? 'url(#maze-gold)' : 'url(#maze-trap)', cell === 'G' ? '#a0a842' : '#b44c43', cell === 'G' ? '#d7b64b' : '#d27b64');
+        scene += block(
+          x + 0.07,
+          y + 0.07,
+          0.86,
+          0.86,
+          0.04,
+          0.18,
+          cell === 'G' ? 'url(#maze-gold)' : 'url(#maze-trap)',
+          cell === 'G' ? '#a0a842' : '#b44c43',
+          cell === 'G' ? '#d7b64b' : '#d27b64',
+        );
       }
-      const outline = corners(x + .055, y + .055, .89, .89, .20);
-      scene += face(outline, agent ? '#b3e5fa75' : 'none', `class="rl-diorama-selection ${i === selected ? 'is-selected' : ''}" stroke="${agent ? '#75bfdf' : '#258570'}" stroke-width="${i === selected || agent ? 3 : 0}"`);
+      const outline = corners(x + 0.055, y + 0.055, 0.89, 0.89, 0.2);
+      scene += face(
+        outline,
+        agent ? '#b3e5fa75' : 'none',
+        `class="rl-diorama-selection ${i === selected ? 'is-selected' : ''}" stroke="${agent ? '#75bfdf' : '#258570'}" stroke-width="${i === selected || agent ? 3 : 0}"`,
+      );
       if (policy && !['G', 'T'].includes(cell)) {
-        const arrows = bestActions(table[i] ?? [0, 0, 0, 0]).map(a => DIRECTIONS[a]).join('');
-        scene += roundedFace(corners(x + .18, y + .20, .64, .64, .08), '#6ca88b20');
-        scene += groundText(x + .5, y + .7, arrows, `class="rl-diorama-policy" style="font-size:${arrows.length > 2 ? 15 : 24}px"`);
+        const arrows = bestActions(table[i] ?? [0, 0, 0, 0])
+          .map((a) => DIRECTIONS[a])
+          .join('');
+        scene += roundedFace(
+          corners(x + 0.18, y + 0.2, 0.64, 0.64, 0.08),
+          '#6ca88b20',
+        );
+        scene += groundText(
+          x + 0.5,
+          y + 0.7,
+          arrows,
+          `class="rl-diorama-policy" style="font-size:${arrows.length > 2 ? 15 : 24}px"`,
+        );
       }
       if (cell === 'G') {
-        const [sx, sy] = project(x + .5, y + .5, .34);
-        scene += face(star(sx + 1, sy + 4, 21), '#ac7c25') + face(star(sx, sy, 21), 'url(#maze-gold)', 'stroke="#fff2ae" stroke-width="1.5" stroke-linejoin="round"');
-        scene += groundText(x + .5, y + .84, '◎ GOAL', 'class="rl-diorama-goal-label"');
+        const [sx, sy] = project(x + 0.5, y + 0.5, 0.34);
+        scene +=
+          face(star(sx + 1, sy + 4, 21), '#ac7c25') +
+          face(
+            star(sx, sy, 21),
+            'url(#maze-gold)',
+            'stroke="#fff2ae" stroke-width="1.5" stroke-linejoin="round"',
+          );
+        scene += groundText(
+          x + 0.5,
+          y + 0.84,
+          '◎ GOAL',
+          'class="rl-diorama-goal-label"',
+        );
       } else if (cell === 'T') {
-        const [tx, ty] = project(x + .5, y + .55, .22);
+        const [tx, ty] = project(x + 0.5, y + 0.55, 0.22);
         scene += `<path d="M${tx} ${ty - 20}l-16 28q16 6 32 0Z" fill="#c53b31" stroke="#ffdad0" stroke-width="1.8" stroke-linejoin="round"/><text x="${tx}" y="${ty + 4}" class="rl-diorama-warning">!</text>`;
       }
-      scene += groundText(x + .18, y + .18, `S${i}${cell === 'S' ? ' · Start' : ''}`, 'class="rl-diorama-state"');
+      scene += groundText(
+        x + 0.18,
+        y + 0.18,
+        `S${i}${cell === 'S' ? ' · Start' : ''}`,
+        'class="rl-diorama-state"',
+      );
     }
     scene += '</g>';
     // Transparent native buttons retain click, Tab/Enter/Space and focus behavior.
     // Only the visible tile footprint is a hit target; the robot extends upward.
-    let polygon = corners(x + .025, y + .025, .95, .95, .07);
+    let polygon = corners(x + 0.025, y + 0.025, 0.95, 0.95, 0.07);
     if (agent) {
-      const [rx, ry] = project(x + .5, y + .51, .15), s = .9 + (y + .51) * .055;
-      polygon = [polygon[0], [rx - 30 * s, ry - 92 * s], [rx + 30 * s, ry - 92 * s], polygon[1], polygon[2], polygon[3]];
+      const [rx, ry] = project(x + 0.5, y + 0.51, 0.15),
+        s = 0.9 + (y + 0.51) * 0.055;
+      polygon = [
+        polygon[0],
+        [rx - 30 * s, ry - 92 * s],
+        [rx + 30 * s, ry - 92 * s],
+        polygon[1],
+        polygon[2],
+        polygon[3],
+      ];
     }
-    const minX = Math.min(...polygon.map(p => p[0])), minY = Math.min(...polygon.map(p => p[1]));
-    const w = Math.max(...polygon.map(p => p[0])) - minX, h = Math.max(...polygon.map(p => p[1])) - minY;
-    const clip = polygon.map(([px, py]) => `${(px - minX) / w * 100}% ${(py - minY) / h * 100}%`).join(',');
-    buttons.push(`<button type="button" class="rl-diorama-hit" data-state="${i}" aria-pressed="${i === selected}" aria-label="S${i} ${label}${agent ? ' Agent' : ''}" ${cell === '#' ? 'disabled' : ''} style="left:${minX / WIDTH * 100}%;top:${(minY - TOP) / HEIGHT * 100}%;width:${w / WIDTH * 100}%;height:${h / HEIGHT * 100}%;clip-path:polygon(${clip});z-index:${i + 1}"><span class="sr-only">S${i} ${label}</span></button>`);
+    const minX = Math.min(...polygon.map((p) => p[0])),
+      minY = Math.min(...polygon.map((p) => p[1]));
+    const w = Math.max(...polygon.map((p) => p[0])) - minX,
+      h = Math.max(...polygon.map((p) => p[1])) - minY;
+    const clip = polygon
+      .map(
+        ([px, py]) => `${((px - minX) / w) * 100}% ${((py - minY) / h) * 100}%`,
+      )
+      .join(',');
+    buttons.push(
+      `<button type="button" class="rl-diorama-hit" data-state="${i}" aria-pressed="${i === selected}" aria-label="S${i} ${label}${agent ? ' Agent' : ''}" ${cell === '#' ? 'disabled' : ''} style="left:${(minX / WIDTH) * 100}%;top:${((minY - TOP) / HEIGHT) * 100}%;width:${(w / WIDTH) * 100}%;height:${(h / HEIGHT) * 100}%;clip-path:polygon(${clip});z-index:${i + 1}"><span class="sr-only">S${i} ${label}</span></button>`,
+    );
   }
   // Mount point for the animated agent. robot-animator.js fills this <g> with the
   // articulated rig each frame; keeping it empty here means the learning render

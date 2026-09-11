@@ -7,5 +7,7 @@ self.onmessage = ({ data }) => {
       self.postMessage({ type: 'result', result });
     }
     self.postMessage({ type: 'done' });
-  } catch (error) { self.postMessage({ type: 'error', message: error.message }); }
+  } catch (error) {
+    self.postMessage({ type: 'error', message: error.message });
+  }
 };
