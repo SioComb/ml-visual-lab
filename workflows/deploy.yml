@@ -1,41 +1,61 @@
-name: Deploy GitHub Pages
+# GitHub Pages deployment
+name: Deploy static content to Pages
 
 on:
+  # main にマージされた場合だけ自動デプロイ
   push:
     branches:
       - main
 
+  # Actions画面から手動実行可能
   workflow_dispatch:
 
+# GitHub Pagesへのデプロイに必要な最小権限
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# 同時に複数のPagesデプロイを走らせない
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
+    # featureブランチから手動実行しても本番デプロイしない
+    if: github.ref == 'refs/heads/main'
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
 
     runs-on: ubuntu-latest
 
+    # 異常終了せず処理が残り続けることを防止
+    timeout-minutes: 5
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        # actions/checkout v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          # checkout後にGITHUB_TOKENをgit設定へ残さない
+          persist-credentials: false
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        # actions/configure-pages v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
 
-      - name: Upload site
-        uses: actions/upload-pages-artifact@v4
+      - name: Upload artifact
+        # actions/upload-pages-artifact v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
+          # 公開対象はdistだけ
           path: ./dist
 
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+
+        # actions/deploy-pages v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
