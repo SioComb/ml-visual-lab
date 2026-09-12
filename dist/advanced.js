@@ -16,6 +16,213 @@ function random(seed = 42) {
   };
 }
 
+// A deterministic CART-style tree used by the standalone Decision Tree lesson.
+// Random Forest intentionally keeps its bootstrap/feature-sampling implementation
+// below so that adding this model does not change existing forest results.
+export function fitDecisionTree(rows, opts = {}, classes = [], features = []) {
+  if (!Array.isArray(rows) || !rows.length)
+    throw Error('決定木の学習には1件以上のデータが必要です。');
+  const classification = opts.task === 'classification',
+    dimensions = rows[0]?.x?.length ?? 0,
+    maxDepth = opts.depth ?? opts.maxDepth ?? opts.max_depth ?? 3,
+    minSamplesSplit =
+      opts.minSamplesSplit ?? opts.min_samples_split ?? 2;
+  if (
+    !dimensions ||
+    rows.some(
+      (row) => !Array.isArray(row.x) || row.x.length !== dimensions,
+    )
+  )
+    throw Error('決定木の特徴量の形式が不正です。');
+  if (rows.some((row) => row.x.some((value) => !Number.isFinite(value))))
+    throw Error('決定木の特徴量には有限の数値を指定してください。');
+  if (!Number.isInteger(maxDepth) || maxDepth < 1 || maxDepth > 10)
+    throw Error('木の深さの上限は1〜10の整数で指定してください。');
+  if (!Number.isInteger(minSamplesSplit) || minSamplesSplit < 2)
+    throw Error('分割に必要な最小サンプル数は2以上の整数で指定してください。');
+  if (classification) {
+    if (!Array.isArray(classes) || !classes.length)
+      throw Error('分類木には1種類以上のクラスが必要です。');
+    if (rows.some((row) => !classes.includes(row.y)))
+      throw Error('分類木のクラス情報が不正です。');
+  } else if (rows.some((row) => !Number.isFinite(row.y)))
+    throw Error('回帰木の目的変数には有限の数値を指定してください。');
+
+  const targets = classification
+      ? rows.map((row) => classes.indexOf(row.y))
+      : rows.map((row) => row.y),
+    featureInfo = Array.from({ length: dimensions }, (_, index) => ({
+      name: features[index]?.name ?? `X${index + 1}`,
+      scale: features[index]?.scale ?? 1,
+      offset: features[index]?.offset ?? 0,
+      category: features[index]?.category ?? null,
+    }));
+  let nextId = 0;
+
+  function statistics(ids) {
+    if (classification) {
+      const counts = classes.map(() => 0);
+      ids.forEach((id) => counts[targets[id]]++);
+      const probabilities = counts.map((count) => count / ids.length),
+        predictionIndex = probabilities.indexOf(Math.max(...probabilities));
+      return {
+        impurity: 1 - probabilities.reduce((sum, value) => sum + value ** 2, 0),
+        prediction: classes[predictionIndex],
+        probabilities,
+        classCounts: classes.map((label, index) => ({
+          label,
+          count: counts[index],
+        })),
+      };
+    }
+    const prediction =
+        ids.reduce((sum, id) => sum + targets[id], 0) / ids.length,
+      impurity =
+        ids.reduce((sum, id) => sum + (targets[id] - prediction) ** 2, 0) /
+        ids.length;
+    return { impurity, prediction };
+  }
+
+  function bestSplit(ids, parentImpurity) {
+    let best = null;
+    for (let feature = 0; feature < dimensions; feature++) {
+      const sorted = [...ids].sort(
+        (a, b) => rows[a].x[feature] - rows[b].x[feature] || a - b,
+      );
+      const leftCounts = classes.map(() => 0),
+        rightCounts = classes.map(() => 0);
+      let leftSum = 0,
+        leftSq = 0,
+        rightSum = classification
+          ? 0
+          : sorted.reduce((sum, id) => sum + targets[id], 0),
+        rightSq = classification
+          ? 0
+          : sorted.reduce((sum, id) => sum + targets[id] ** 2, 0);
+      if (classification) sorted.forEach((id) => rightCounts[targets[id]]++);
+      for (let position = 0; position < sorted.length - 1; position++) {
+        const target = targets[sorted[position]],
+          leftN = position + 1,
+          rightN = sorted.length - leftN;
+        if (classification) {
+          leftCounts[target]++;
+          rightCounts[target]--;
+        } else {
+          leftSum += target;
+          leftSq += target ** 2;
+          rightSum -= target;
+          rightSq -= target ** 2;
+        }
+        const low = rows[sorted[position]].x[feature],
+          high = rows[sorted[position + 1]].x[feature];
+        if (low === high) continue;
+        const loss = classification
+          ? leftN -
+            leftCounts.reduce((sum, count) => sum + count ** 2, 0) / leftN +
+            rightN -
+            rightCounts.reduce((sum, count) => sum + count ** 2, 0) / rightN
+          : leftSq -
+            (leftSum ** 2) / leftN +
+            rightSq -
+            (rightSum ** 2) / rightN;
+        if (!best || loss < best.loss - 1e-12)
+          best = {
+            loss,
+            feature,
+            threshold: low / 2 + high / 2,
+          };
+      }
+    }
+    return best && best.loss < parentImpurity * ids.length - 1e-12
+      ? best
+      : null;
+  }
+
+  function build(ids, depth) {
+    const stats = statistics(ids),
+      node = {
+        id: nextId++,
+        depth,
+        samples: ids.length,
+        prediction: stats.prediction,
+        impurity: stats.impurity,
+        ...(classification
+          ? {
+              gini: stats.impurity,
+              probabilities: stats.probabilities,
+              classCounts: stats.classCounts,
+            }
+          : { mse: stats.impurity }),
+      };
+    if (
+      depth >= maxDepth ||
+      ids.length < minSamplesSplit ||
+      stats.impurity <= 1e-12
+    )
+      return node;
+    const split = bestSplit(ids, stats.impurity);
+    if (!split) return node;
+    const info = featureInfo[split.feature],
+      leftIds = ids.filter(
+        (id) => rows[id].x[split.feature] <= split.threshold,
+      ),
+      rightIds = ids.filter(
+        (id) => rows[id].x[split.feature] > split.threshold,
+      );
+    if (!leftIds.length || !rightIds.length) return node;
+    return {
+      ...node,
+      feature: split.feature,
+      featureName: info.name,
+      threshold: split.threshold,
+      displayThreshold: split.threshold * info.scale + info.offset,
+      category: info.category,
+      left: build(leftIds, depth + 1),
+      right: build(rightIds, depth + 1),
+    };
+  }
+
+  const root = build(
+      Array.from({ length: rows.length }, (_, index) => index),
+      0,
+    ),
+    leaf = (x) => {
+      let node = root;
+      while (node.left)
+        node = x[node.feature] <= node.threshold ? node.left : node.right;
+      return node;
+    };
+  let nodeCount = 0,
+    leafCount = 0,
+    treeDepth = 0;
+  (function inspect(node) {
+    nodeCount++;
+    treeDepth = Math.max(treeDepth, node.depth);
+    if (!node.left) leafCount++;
+    else {
+      inspect(node.left);
+      inspect(node.right);
+    }
+  })(root);
+  return {
+    root,
+    predict: classification
+      ? (x) => {
+          const node = leaf(x);
+          return { label: node.prediction, probabilities: node.probabilities };
+        }
+      : (x) => leaf(x).prediction,
+    info: {
+      criterion: classification ? 'gini' : 'mse',
+      maxDepth,
+      minSamplesSplit,
+      treeDepth,
+      nodeCount,
+      leafCount,
+    },
+  };
+}
+
 export function fitForest(rows, opts, classes) {
   const classification = opts.task === 'classification',
     rand = random(73),

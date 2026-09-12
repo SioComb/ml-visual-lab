@@ -4,8 +4,8 @@ import { trainModel, sample } from '../dist/ml.js';
 
 const base = { x: 0, x2: 1, target: 2, test: 25, degree: 3, k: 7, trees: 10, depth: 4, kernel: 'rbf', c: 1, gamma: 1, epsilon: 0.1, clusters: 3, linkage: 'ward', scaling: 'standard', oneHot: true, categoryColumns: [] };
 for (const [task, algorithms, kind] of [
-  ['regression', ['linear', 'polynomial', 'forest', 'svr'], 'linear'],
-  ['classification', ['logistic', 'knn', 'forest', 'svm'], 'moons'],
+  ['regression', ['linear', 'polynomial', 'tree', 'forest', 'svr'], 'linear'],
+  ['classification', ['logistic', 'knn', 'tree', 'forest', 'svm'], 'moons'],
   ['clustering', ['kmeans', 'hierarchical'], 'clusters'],
 ]) for (const algorithm of algorithms) test(`Existing ${task} / ${algorithm} trains on sample data`, () => {
   const data = sample(kind, 18, task);

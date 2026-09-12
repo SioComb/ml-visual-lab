@@ -100,6 +100,41 @@ export function modelOverlay(result, axes) {
   return svg;
 }
 
+export function renderDecisionTree(result) {
+  const root = result.decisionTree;
+  if (!root) {
+    $('treePanel').hidden = true;
+    return;
+  }
+  const classification = result.opts.task === 'classification',
+    info = result.extraInfo;
+  $('treeHelp').textContent =
+    `深さ ${info.treeDepth}（上限 ${info.maxDepth}）· ${info.nodeCount}ノード · ${info.leafCount}枚の葉 · 分割には最低${info.minSamplesSplit}件`;
+
+  function nodeHTML(node, branch = '') {
+    const condition = node.left
+        ? `${esc(node.featureName)} ≤ ${fmt(node.displayThreshold)}`
+        : '葉ノード',
+      measure = classification
+        ? `Gini: ${fmt(node.gini)}`
+        : `MSE: ${fmt(node.mse)}`,
+      prediction = classification
+        ? `Class: ${esc(node.prediction)}`
+        : `Value: ${fmt(node.prediction)}`,
+      counts = classification
+        ? `<span class="tree-counts">Counts: ${node.classCounts
+            .map((item) => `${esc(item.label)} ${item.count}`)
+            .join(' · ')}</span>`
+        : '',
+      children = node.left
+        ? `<ul>${nodeHTML(node.left, 'True')}${nodeHTML(node.right, 'False')}</ul>`
+        : '';
+    return `<li>${branch ? `<span class="tree-branch">${branch}</span>` : ''}<div class="tree-node ${node.left ? '' : 'leaf'}" role="treeitem" aria-label="${esc(condition)}, ${measure}, Samples: ${node.samples}, ${prediction}"><strong>${condition}</strong><span>${measure}</span><span>Samples: ${node.samples}</span>${counts}<b>${prediction}</b></div>${children}</li>`;
+  }
+  $('treeVisual').innerHTML =
+    `<div class="tree-root" role="tree" aria-label="学習した決定木"><ul>${nodeHTML(root)}</ul></div>`;
+}
+
 export function renderClustering(result, axesFactory) {
   const kmeans = result.opts.algorithm === 'kmeans',
     count = result.points.length,
@@ -141,6 +176,7 @@ export function renderClustering(result, axesFactory) {
   $('pointFilter').hidden = true;
   $('clusterStepControl').hidden = !kmeans;
   $('hierarchyPanel').hidden = kmeans;
+  $('treePanel').hidden = true;
   if (kmeans) {
     $('clusterStep').max = result.steps.length - 1;
     $('clusterStep').value = result.steps.length - 1;

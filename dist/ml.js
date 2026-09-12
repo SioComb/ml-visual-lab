@@ -4,7 +4,13 @@ import {
   preprocessingResult,
   createPlotSpace,
 } from './preprocessing.js';
-import { fitForest, fitSVM, fitSVR, fitClustering } from './advanced.js';
+import {
+  fitDecisionTree,
+  fitForest,
+  fitSVM,
+  fitSVR,
+  fitClustering,
+} from './advanced.js';
 export function rng(seed = 42) {
   return () => {
     seed |= 0;
@@ -161,8 +167,39 @@ export function trainModel(data, opts, progress = () => {}) {
     history = [],
     equation = '',
     weights = [],
-    advanced = null;
-  if (opts.algorithm === 'forest') {
+    advanced = null,
+    decisionTree = null;
+  if (opts.algorithm === 'tree') {
+    const featureInfo = processor.schema.columns.flatMap((column) =>
+        column.type === 'category'
+          ? column.outputs.map((category) => ({
+              name: `${column.name}=${category}`,
+              category,
+            }))
+          : [
+              {
+                name: column.name,
+                scale: column.scale,
+                offset: column.offset,
+              },
+            ],
+      ),
+      tree = fitDecisionTree(
+        train.map((row) => ({ ...row, x: norm(row.x) })),
+        opts,
+        classes,
+        featureInfo,
+      );
+    advanced = {
+      ...tree,
+      predict: (raw) => tree.predict(norm(raw)),
+    };
+    decisionTree = tree.root;
+    predict = advanced.predict;
+    equation = cls
+      ? `Gini impurityを最小化 · 深さ ${tree.info.treeDepth} / 上限 ${tree.info.maxDepth}`
+      : `MSEを最小化 · 葉の平均で予測 · 深さ ${tree.info.treeDepth} / 上限 ${tree.info.maxDepth}`;
+  } else if (opts.algorithm === 'forest') {
     const forest = fitForest(
       train.map((r) => ({ ...r, x: norm(r.x) })),
       opts,
@@ -363,6 +400,7 @@ export function trainModel(data, opts, progress = () => {}) {
     preprocessing,
     plotAxes: plot.axes,
     extraInfo: advanced?.info,
+    decisionTree,
     supportIds: advanced?.supportIds ?? [],
     treeCurves,
     train,

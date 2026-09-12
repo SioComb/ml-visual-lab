@@ -159,6 +159,31 @@
                 >木の深さの上限 <output id="depthValue">5</output></label
               ><input id="depth" type="range" min="1" max="10" value="5"
             /></div>
+            <div id="treeControls" hidden
+              ><label for="treeDepth" class="range-label"
+                >最大深さ max_depth
+                <output id="treeDepthValue">3</output></label
+              ><input
+                id="treeDepth"
+                type="range"
+                min="1"
+                max="10"
+                value="3"
+              /><div class="range-hints"
+                ><span>浅い・単純</span><span>深い・複雑</span></div
+              ><label for="minSamplesSplit" class="range-label"
+                >分割の最小サンプル数
+                <output id="minSamplesSplitValue">2</output></label
+              ><input
+                id="minSamplesSplit"
+                type="range"
+                min="2"
+                max="20"
+                value="2"
+              /><p class="field-help"
+                >決定木は値の大小で分割するため、通常Feature Scalingは不要です。「なし（元の値）」を推奨します。</p
+              ></div
+            >
             <div id="svmControls" hidden
               ><label for="kernel">カーネル</label
               ><select id="kernel"
@@ -308,6 +333,13 @@
             ><p class="field-help"
               >縦軸は結合するときの距離。高い位置で結ばれるほど離れたグループです。横軸は元データの行番号で、値の大小は表しません。</p
             ></section
+          ><section class="panel tree-panel" id="treePanel" hidden
+            ><h3>決定木の構造</h3
+            ><p id="treeHelp"></p
+            ><div id="treeVisual" class="tree-visual"></div
+            ><p class="field-help"
+              >左（True）は条件を満たすデータ、右（False）は条件を満たさないデータです。横に長い木はスクロールできます。</p
+            ></section
           ><div class="lower-grid"
             ><section class="panel diagnostic"
               ><h3 id="diagnosticTitle">予測はどれだけ合っている？</h3
@@ -368,6 +400,11 @@
           target="_blank"
           rel="noopener noreferrer"
           >SVM・SVR</a
+        ><a
+          href="https://scikit-learn.org/stable/modules/tree.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          >決定木</a
         ><a
           href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html"
           target="_blank"

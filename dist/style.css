@@ -1175,6 +1175,130 @@ dialog li p,
   margin-top: 19px;
   min-width: 0;
 }
+.tree-panel {
+  margin-top: 19px;
+  min-width: 0;
+}
+.tree-visual {
+  overflow-x: auto;
+  width: 100%;
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 18px 12px;
+  background: #fdfefd;
+}
+.tree-root {
+  display: inline-flex;
+  min-width: 100%;
+  justify-content: center;
+}
+.tree-root ul {
+  display: flex;
+  position: relative;
+  margin: 0;
+  padding: 26px 0 0;
+}
+.tree-root > ul {
+  padding-top: 0;
+}
+.tree-root li {
+  position: relative;
+  min-width: 174px;
+  padding: 26px 7px 0;
+  list-style: none;
+  text-align: center;
+}
+.tree-root > ul > li {
+  padding-top: 0;
+}
+.tree-root li::before,
+.tree-root li::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 25px;
+  border-top: 1px solid #9fb5aa;
+}
+.tree-root li::before {
+  right: 50%;
+}
+.tree-root li::after {
+  left: 50%;
+  border-left: 1px solid #9fb5aa;
+}
+.tree-root li:only-child::before,
+.tree-root li:only-child::after,
+.tree-root > ul > li::before,
+.tree-root > ul > li::after {
+  display: none;
+}
+.tree-root li:first-child::before,
+.tree-root li:last-child::after {
+  border-top-color: transparent;
+}
+.tree-root li:last-child::before {
+  border-right: 1px solid #9fb5aa;
+  border-radius: 0 5px 0 0;
+}
+.tree-root li:first-child::after {
+  border-radius: 5px 0 0;
+}
+.tree-root ul ul::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  height: 26px;
+  border-left: 1px solid #9fb5aa;
+}
+.tree-node {
+  display: inline-flex;
+  width: 160px;
+  min-height: 116px;
+  padding: 10px;
+  border: 1px solid #9ab7aa;
+  border-radius: 7px;
+  background: white;
+  box-shadow: 0 2px 7px #16382a10;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: left;
+}
+.tree-node strong {
+  color: var(--ink);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.tree-node b {
+  color: var(--green);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.tree-node.leaf {
+  border-color: #70a58e;
+  background: var(--mint);
+}
+.tree-counts {
+  overflow-wrap: anywhere;
+}
+.tree-branch {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  z-index: 1;
+  padding: 0 4px;
+  transform: translateX(-50%);
+  background: #fdfefd;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 650;
+}
 .dendrogram {
   overflow-x: auto;
   width: 100%;
@@ -1235,6 +1359,9 @@ dialog li p,
     margin-right: 17px;
   }
   .hierarchy-panel {
+    padding: 17px;
+  }
+  .tree-panel {
     padding: 17px;
   }
   .sources {

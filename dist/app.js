@@ -1,7 +1,12 @@
 import { sampleOptions } from './samples.js';
 import { sample, parseCSV, numeric } from './ml.js';
 import { renderPreprocessing, processedCSVRows } from './preprocessing-ui.js';
-import { modelOverlay, renderClustering, drawClusters } from './visuals.js';
+import {
+  modelOverlay,
+  renderClustering,
+  drawClusters,
+  renderDecisionTree,
+} from './visuals.js';
 import { initReinforcement } from './rl/ui.js';
 import { initAssociation } from './association/ui.js';
 import { initNLP } from './nlp/ui.js';
@@ -38,6 +43,7 @@ const names = {
   polynomial: '多項式回帰',
   logistic: 'ロジスティック回帰',
   knn: 'k近傍法（k-NN）',
+  tree: '決定木（Decision Tree）',
   forest: 'ランダムフォレスト',
   svm: 'サポートベクターマシン（SVM）',
   svr: 'サポートベクター回帰（SVR）',
@@ -49,6 +55,7 @@ const descriptions = {
   polynomial: '曲線で関係をとらえます。次数を上げると複雑な形に。',
   logistic: '2クラスの確率を学習し、直線の境界で分けます。',
   knn: '近くにある学習データの多数決で分類します。',
+  tree: '特徴量と閾値を選び、データを枝分かれさせて予測します。',
   forest: 'データと入力列をランダムに選んだ複数の決定木を組み合わせます。',
   svm: 'マージンを広く取る境界を学習します。RBFなら曲がった境界にも対応。',
   svr: 'εの範囲内の誤差を許しながら、数値を予測するSVM系のモデルです。',
@@ -86,8 +93,8 @@ function populateMode() {
   const models = cluster
     ? ['kmeans', 'hierarchical']
     : cls
-      ? ['logistic', 'knn', 'forest', 'svm']
-      : ['linear', 'polynomial', 'forest', 'svr'];
+      ? ['logistic', 'knn', 'tree', 'forest', 'svm']
+      : ['linear', 'polynomial', 'tree', 'forest', 'svr'];
   options(
     $('algorithm'),
     models.map((v) => [v, names[v]]),
@@ -141,6 +148,7 @@ function modelSettings() {
   $('complexity').value = a === 'knn' ? 7 : 3;
   $('complexityValue').textContent = $('complexity').value;
   $('forestControls').hidden = a !== 'forest';
+  $('treeControls').hidden = a !== 'tree';
   $('svmControls').hidden = a !== 'svm' && a !== 'svr';
   $('epsilonField').hidden = a !== 'svr';
   $('gammaField').hidden = $('kernel').value === 'linear';
@@ -157,7 +165,11 @@ function getOpts() {
     k: +$('complexity').value,
     test: +$('testRatio').value,
     trees: +$('trees').value,
-    depth: +$('depth').value,
+    depth:
+      $('algorithm').value === 'tree'
+        ? +$('treeDepth').value
+        : +$('depth').value,
+    minSamplesSplit: +$('minSamplesSplit').value,
     kernel: $('kernel').value,
     c: +$('svmC').value,
     gamma: +$('gamma').value,
@@ -332,6 +344,7 @@ function render() {
   $('residualControl').hidden = cls;
   $('clusterStepControl').hidden = true;
   $('hierarchyPanel').hidden = true;
+  $('treePanel').hidden = r.opts.algorithm !== 'tree';
   $('pointFilter').hidden = false;
   $('detailControl').hidden = !(
     ['svm', 'svr'].includes(r.opts.algorithm) ||
@@ -358,6 +371,7 @@ function render() {
     $('legend').innerHTML += '<span>破線: 判断スコア ±1</span>';
   $('equation').textContent = r.equation;
   drawMain();
+  if (r.opts.algorithm === 'tree') renderDecisionTree(r);
   drawDiagnostic();
   renderReading();
   renderTable();
@@ -466,12 +480,17 @@ function drawMain() {
     s += classificationBoundary(r, a);
   s += modelOverlay(r, a);
   if (!cls) {
-    const path = r.curve
-      .map(
-        (p, i) =>
-          `${r.plotAxes?.[0]?.type === 'category' ? 'M' : i ? 'L' : 'M'}${x(p[0]).toFixed(2)},${y(p[1]).toFixed(2)}`,
-      )
-      .join(' ');
+    const categorical = r.plotAxes?.[0]?.type === 'category',
+      path = r.curve
+        .map((p, i) => {
+          const px = x(p[0]).toFixed(2),
+            py = y(p[1]).toFixed(2);
+          if (categorical || !i) return `M${px},${py}`;
+          return r.opts.algorithm === 'tree'
+            ? `H${px}V${py}`
+            : `L${px},${py}`;
+        })
+        .join(' ');
     s += `<path d="${path}" stroke="${palette[0]}" stroke-width="2.7" fill="none"/>`;
     if (r.plotAxes?.[0]?.type === 'category')
       s += r.curve
@@ -612,6 +631,19 @@ function renderReading() {
       ? '各決定木が出すクラス確率を平均し、最も高いクラスを選びます。木ごとにデータを復元抽出し、分岐ごとに入力列の候補をランダムに選びます。1本の木への依存を減らすアンサンブル学習です。'
       : '複数の決定木の数値予測を平均します。「5本の木も表示」で個々の木と最終的な予測線を比較できます。現在の回帰は入力1列なので、木の違いは主にデータの復元抽出から生まれます。';
   }
+  if (a === 'tree') {
+    $('readingTitle').textContent = cls
+      ? '条件を重ねて、同じクラスを集める'
+      : '条件ごとの平均で、階段状に予測する';
+    $('readingText').textContent = cls
+      ? '決定木は特徴量の値を条件にデータを繰り返し分割します。Gini impurityが小さくなる分割を選び、同じクラスのデータが集まるように木を成長させます。Random Forestは複数の決定木を作成し、分類では多数決、回帰では平均を取るアンサンブル学習です。この教材の分類では、各木の葉が持つクラス確率を平均します。'
+      : '回帰木は予測値のばらつき（MSE）が小さくなるようにデータを分割します。葉ノードでは、そのグループに属する学習データの平均値を予測に使います。Random Forestは複数の決定木を作成し、分類では多数決、回帰では平均を取るアンサンブル学習です。';
+    text +=
+      ' 決定木は特徴量の大小関係を使うため、通常Feature Scalingは必要ありません。' +
+      (r.opts.depth >= 7
+        ? ' 木を深くすると学習データには合わせやすくなりますが、細かく分割しすぎると過学習する可能性があります。'
+        : ' 最大深さを変えると、単純な木と細かな木の違いを比較できます。');
+  }
   if (a === 'svm') {
     $('readingTitle').textContent = '境界を支える、サポートベクトル';
     $('readingText').textContent =
@@ -646,6 +678,8 @@ function renderReading() {
     logistic:
       '買い物傾向のサンプルでk近傍法と比較。直線では分けにくい形を、どちらがとらえられるでしょうか？',
     knn: 'kを1から25に変えてみよう。小さいと細かな境界、大きいとより広い範囲の多数決になります。',
+    tree:
+      '最大深さを1から10へ変えてみよう。木の枝、分類の矩形境界、回帰の階段がどう細かくなるでしょうか？',
     forest:
       '木の深さを1から10に変えてみよう。木の本数も増やすと、予測の細かさやテストの成績はどう変わるでしょうか？',
     svm: '買い物傾向のサンプルで線形とRBFを比較。Cを大きくして誤分類を厳しく扱うと、境界はどう変わるでしょうか？',
@@ -847,7 +881,13 @@ $('guide').addEventListener('click', (e) => {
       $('guide').close();
   }
 });
-for (const id of ['trees', 'depth', 'clusterCount'])
+for (const id of [
+  'trees',
+  'depth',
+  'treeDepth',
+  'minSamplesSplit',
+  'clusterCount',
+])
   $(id).oninput = () => {
     $(id + 'Value').textContent = $(id).value;
     markDirty();
