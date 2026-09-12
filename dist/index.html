@@ -14,6 +14,7 @@
       href="./rl/style.css" /><link
       rel="stylesheet"
       href="./association/style.css"
+    /><link rel="stylesheet" href="./nlp/style.css"
   /></head>
   <body>
     <header class="topbar"
@@ -34,16 +35,18 @@
           ><p>条件を変えて学習し、予測の仕組みを目で確かめる。</p></div
         ><div class="task-switch" role="group" aria-label="学習の種類"
           ><button id="regTask" class="active" aria-pressed="true"
-            ><span>↗</span> 回帰 <small>教師あり · 数値</small></button
+            ><span>📈</span> 回帰 <small>教師あり</small></button
           ><button id="clsTask" aria-pressed="false"
-            ><span>⠿</span> 分類 <small>教師あり · ラベル</small></button
+            ><span>🗃️</span> 分類 <small>教師あり</small></button
           ><button id="clusterTask" aria-pressed="false"
-            ><span>⋈</span> 教師なし <small>クラスタリング</small></button
+            ><span>🫧</span> ｸﾗｽﾘﾝｸﾞ <small>教師なし</small></button
           ><button id="rlTask" aria-pressed="false"
-            ><span>↻</span> 強化学習 <small>報酬から行動を学ぶ</small></button
+            ><span>🤖</span> 強化学習 <small>報酬で学ぶ</small></button
           ><button id="assocTask" type="button" aria-pressed="false"
-            ><span>⋄</span> 購買パターン
-            <small>応用 · Apriori ほか</small></button
+            ><span>🛒</span> Associon
+            <small>購買パターン</small></button
+          ><button id="nlpTask" type="button" aria-pressed="false"
+            ><span>💬</span> 自然言語処理 <small>Bag of Words</small></button
           ></div
         ></section
       >
@@ -353,6 +356,7 @@
         hidden
         aria-label="購買パターン探索 / Association Mining"
       ></section
+      ><section id="nlp" class="nlp-page" hidden aria-label="自然言語処理 / NLP"></section
       ><footer
         ><span><b>ML Visual Lab</b> · 学んで、変えて、確かめる。</span
         ><span

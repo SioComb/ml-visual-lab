@@ -4,7 +4,7 @@ import { Worker } from 'node:worker_threads';
 import { mine, normalizeTransactions, associationRules } from '../dist/association/mining.js';
 import { sampleBaskets, parseBaskets, toCSV } from '../dist/association/data.js';
 
-const algorithms = ['apriori', 'eclat', 'fpgrowth'];
+const algorithms = ['apriori', 'fpgrowth', 'eclat'];
 const canonical = patterns => patterns.map(({ items, count }) => [items, count]).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
 function exhaustive(rows, support, maxLength) {
   const baskets = rows.map(row => new Set(row));
@@ -69,7 +69,7 @@ test('Generated data is reproducible and all three methods agree on larger baske
   assert.notDeepEqual(rows, sampleBaskets('standard', 1000, 43));
   const results = algorithms.map(algorithm => mine(rows, { algorithm, support: 0.05, maxLength: 4 }));
   results.slice(1).forEach(result => assert.deepEqual(canonical(result.patterns), canonical(results[0].patterns)));
-  assert.ok(results[0].stats.candidates > 0); assert.ok(results[1].stats.intersections > 0); assert.ok(results[2].stats.trees > 1);
+  assert.ok(results[0].stats.candidates > 0); assert.ok(results[1].stats.trees > 1); assert.ok(results[2].stats.intersections > 0);
 });
 test('Excessive search stops with an actionable error instead of returning incomplete itemsets', () => {
   const rows = [Array.from({ length: 32 }, (_, index) => `item${index}`)];

@@ -53,7 +53,8 @@ try {
   await page.locator('#assocTask').click();
   assert.equal(await page.evaluate(() => history.length), initialHistory);
   assert.equal(await page.evaluate(() => window.miningWorkers.started), 1);
-  assert.equal(await page.locator('.method-card').count(), 3);
+  assert.deepEqual(await page.locator('.method-card h4').allTextContents(), ['Apriori', 'FP-Growth', 'Eclat']);
+  assert.deepEqual(await page.locator('#method-switch button').allTextContents(), ['Apriori', 'FP-Growth', 'Eclat']);
   assert.match(await page.locator('#agreement').innerText(), /一致/);
   assert.ok(await page.locator('#pattern-table tbody tr').count() > 0);
   await page.locator('.pattern-bar').first().click();
@@ -127,14 +128,15 @@ try {
   await page.locator('.comparison-panel').scrollIntoViewIfNeeded();
   await page.screenshot({ path: '.cache/qa/screenshots/association-mobile-results.png' });
   await page.locator('#regTask').click();
-  if (await page.locator('#resultStatus').innerText() !== '学習完了') await page.locator('#train').click();
+  if (await page.locator('#train').isEnabled() && await page.locator('#resultStatus').innerText() !== '学習完了') await page.locator('#train').click();
+  await page.locator('#resultStatus').filter({ hasText: /^学習完了$/ }).waitFor();
   await page.locator('#mainPlot circle').first().waitFor();
   assert.ok(await page.locator('#mainPlot circle').count() > 0);
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
   // Feature styles must not alter another lab even after association is mounted.
   const commonLayout = () => page.evaluate(() => [...document.querySelectorAll('#supervisedWorkspace .panel, #supervisedWorkspace .data-heading, #supervisedWorkspace .metric')].map(node => {
     const rect = node.getBoundingClientRect(), style = getComputedStyle(node);
-    return [rect.x, rect.y, rect.width, rect.height, style.margin, style.padding, style.flexWrap, style.gap];
+    return [rect.x + scrollX, rect.y + scrollY, rect.width, rect.height, style.margin, style.padding, style.flexWrap, style.gap];
   }));
   const withAssociation = await commonLayout();
   await page.evaluate(() => { [...document.styleSheets].find(sheet => sheet.href?.endsWith('/association/style.css')).disabled = true; });

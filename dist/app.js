@@ -4,6 +4,7 @@ import { renderPreprocessing, processedCSVRows } from './preprocessing-ui.js';
 import { modelOverlay, renderClustering, drawClusters } from './visuals.js';
 import { initReinforcement } from './rl/ui.js';
 import { initAssociation } from './association/ui.js';
+import { initNLP } from './nlp/ui.js';
 import { $, esc } from './shared/dom.js';
 import { downloadCSV } from './shared/download.js';
 const palette = [
@@ -862,17 +863,19 @@ $('downloadProcessed').onclick = () => {
     download('ml-preprocessed.csv', processedCSVRows(result));
 };
 // Each lab owns its state and worker. Navigation mounts optional labs once,
-// hides them when leaving, and keeps the URL and all five buttons in sync.
+// hides them when leaving, and keeps the URL and navigation buttons in sync.
 const viewButtons = {
   regression: 'regTask',
   classification: 'clsTask',
   clustering: 'clusterTask',
   reinforcement: 'rlTask',
   association: 'assocTask',
+  nlp: 'nlpTask',
 };
 let activeView = null,
   reinforcement = null,
-  association = null;
+  association = null,
+  nlp = null;
 
 function viewFromHash() {
   const view = location.hash.slice(1);
@@ -883,13 +886,17 @@ function activateView(next, syncHistory = true) {
   if (next === activeView) return;
   if (activeView === 'reinforcement') reinforcement.hide();
   if (activeView === 'association') association.hide();
-  if (busy && next === 'association') markDirty();
+  if (activeView === 'nlp') nlp.hide();
+  if (busy && ['association', 'nlp'].includes(next)) markDirty();
 
   const existing = ['regression', 'classification', 'clustering'].includes(
     next,
   );
   $('supervisedWorkspace').hidden = !existing;
-  if (next === 'association') {
+  if (next === 'nlp') {
+    nlp ??= initNLP();
+    nlp.show();
+  } else if (next === 'association') {
     association ??= initAssociation();
     association.show();
   } else if (next === 'reinforcement') {

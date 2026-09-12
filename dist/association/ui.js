@@ -113,8 +113,8 @@ export function initAssociation() {
             ><div id="comparison" class="comparison-grid"></div
             ><p class="field-help"
               >処理時間は各手法1回の実測（集計・探索・仕組み表示用の記録を含む）。共通の入力整形、結果ソート、ルール生成、画面描画は除外。実行順はApriori
-              → Eclat →
-              FP-Growth。小さいデータでは計測誤差が大きく、速度の順位は実装や環境でも変わります。</p
+              → FP-Growth →
+              Eclat。小さいデータでは計測誤差が大きく、速度の順位は実装や環境でも変わります。</p
             ></section
           >
           <section class="panel patterns-panel"
@@ -162,9 +162,9 @@ export function initAssociation() {
               aria-label="仕組みを見るアルゴリズム"
               ><button data-method="apriori" class="active" aria-pressed="true"
                 >Apriori</button
-              ><button data-method="eclat" aria-pressed="false">Eclat</button
               ><button data-method="fpgrowth" aria-pressed="false"
                 >FP-Growth</button
+              ><button data-method="eclat" aria-pressed="false">Eclat</button
               ></div
             ><p id="method-description"></p
             ><div id="method-trace" class="association-table"></div
@@ -199,13 +199,13 @@ export function initAssociation() {
             ><h3>条件を変えて、違いを見つけよう。</h3
             ><p
               >まず支持度を30%から50%へ。どの組合せが消えるでしょう？
-              次に「まとめ買い」で最大サイズを4にして、Aprioriの候補数、Eclatの共通集合の計算回数、FP-Growthの木の構造を比べてみましょう。</p
+              次に「まとめ買い」で最大サイズを4にして、Aprioriの候補数、FP-Growthの木の構造、Eclatの共通集合の計算回数を比べてみましょう。</p
             ></section
           >
         </div>
       </div>`;
 
-  const names = { apriori: 'Apriori', eclat: 'Eclat', fpgrowth: 'FP-Growth' };
+  const names = { apriori: 'Apriori', fpgrowth: 'FP-Growth', eclat: 'Eclat' };
   const percent = (value) => `${(100 * value).toFixed(1).replace(/\.0$/, '')}%`;
   const label = (items) => items.join(' ＋ ');
   const empty = (text) => `<p class="empty-state">${esc(text)}</p>`;

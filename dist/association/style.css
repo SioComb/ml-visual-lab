@@ -40,10 +40,10 @@
   min-width: 0;
 }
 :where(.association-page) .method-card:nth-child(2) {
-  border-top-color: #547ce5;
+  border-top-color: #be8a38;
 }
 :where(.association-page) .method-card:nth-child(3) {
-  border-top-color: #be8a38;
+  border-top-color: #547ce5;
 }
 :where(.association-page) .method-card h4 {
   margin: 0;
