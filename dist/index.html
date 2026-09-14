@@ -14,6 +14,7 @@
       href="./rl/style.css" /><link
       rel="stylesheet"
       href="./association/style.css"
+    /><link rel="stylesheet" href="./dimension/style.css"
     /><link rel="stylesheet" href="./nlp/style.css"
   /></head>
   <body>
@@ -51,8 +52,8 @@
               ><button id="clusterTask" aria-pressed="false"
                 ><span>🫧</span> クラスタリング
                 <small>教師なし</small></button
-              ><button type="button" disabled
-                ><span>📐</span> 次元圧縮 <small>準備中</small></button
+              ><button id="pcaTask" type="button" aria-pressed="false"
+                ><span>📐</span> 次元圧縮 <small>PCA</small></button
               ></div
             ></section
           ><section
@@ -437,11 +438,12 @@
         hidden
         aria-label="購買パターン探索 / Association Mining"
       ></section
+      ><section id="pca" class="pca-page" hidden aria-label="次元圧縮 / PCA"></section
       ><section id="nlp" class="nlp-page" hidden aria-label="自然言語処理 / NLP"></section
       ><footer
         ><span><b>ML Visual Lab</b> · 学んで、変えて、確かめる。</span
         ><span
-          >サンプルは人工データです。CSVは保存・送信されません。</span
+          >Wine以外のサンプルは人工データです。CSVは保存・送信されません。</span
         ></footer
       ><div class="sources"
         >手法の参考：<a
