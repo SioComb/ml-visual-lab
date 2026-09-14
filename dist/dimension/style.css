@@ -1,0 +1,87 @@
+.pca-page { font-size: 16px; }
+.pca-page [hidden] { display: none !important; }
+.pca-heading, .pca-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.pca-heading { padding: 8px 0 12px; }
+.pca-heading h2 { font-size: clamp(22px, 2.2vw, 30px); margin: 5px 0 9px; line-height: 1.5; }
+.pca-heading p:not(.pca-kicker) { color: var(--muted); }
+.pca-kicker { color: var(--green); font-size: 12px; letter-spacing: .06em; font-weight: 700; }
+.pca-badge, .pca-chip { border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px; background: white; font-size: 12px; white-space: nowrap; }
+.pca-badge { margin-top: 12px; }
+.pca-note, .pca-help { color: #53655e; font-size: 12px; line-height: 1.8; }
+.pca-note { margin-bottom: 20px; }
+.pca-flow { display: grid; grid-template-columns: repeat(4, 1fr); padding: 0; margin: 0 0 12px; list-style: none; gap: 8px; }
+.pca-flow li { background: white; border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; font-size: 14px; }
+.pca-flow small { display: block; color: var(--muted); }
+.pca-flow .pca-current { border-color: var(--green); background: var(--mint); box-shadow: inset 0 -3px var(--green); }
+.pca-status { color: var(--green); font-size: 14px; min-height: 28px; margin-bottom: 12px; }
+.pca-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr); gap: 20px; align-items: stretch; }
+.pca-page .panel { padding: 22px; min-width: 0; margin-bottom: 20px; }
+.pca-card-heading { margin-bottom: 14px; }
+.pca-page label { font-size: 14px; display: block; margin: 8px 0 5px; }
+.pca-page select { width: 100%; max-width: 240px; }
+.pca-stage { font-size: 14px; font-weight: 600; background: var(--paper); border-radius: 8px; padding: 10px; margin: 12px 0; min-height: 64px; }
+.pca-transform { display: grid; grid-template-columns: minmax(0, 1fr) 28px 90px; align-items: center; }
+.pca-feature { display: grid; grid-template-columns: minmax(0, 1fr) 64px 42px; gap: 6px; align-items: center; min-height: 30px; }
+.pca-feature > span { font-size: 12px; line-height: 1.3; overflow-wrap: anywhere; }
+.pca-feature output { text-align: right; font-size: 12px; font-variant-numeric: tabular-nums; }
+.pca-track { height: 18px; background: var(--paper); position: relative; }
+.pca-track::after { content: ''; position: absolute; top: -2px; bottom: -2px; left: 50%; width: 1px; background: #92a79d; }
+.pca-track i { display: block; position: absolute; top: 4px; height: 10px; border-radius: 2px; transform-origin: center; }
+.pca-merge { width: 100%; height: 390px; }
+.pca-components { display: flex; flex-direction: column; gap: 58px; }
+.pca-component { border: 1px solid var(--line); background: var(--mint); border-radius: 9px; padding: 10px 5px; text-align: center; }
+.pca-component strong, .pca-component output, .pca-component small { display: block; }
+.pca-component strong { color: var(--green); font-size: 14px; }
+.pca-component output { font-size: 20px; font-variant-numeric: tabular-nums; font-weight: 650; }
+.pca-component small { font-size: 12px; }
+.pca-component-track { height: 5px; margin: 8px 4px 0; background: white; }
+.pca-component-track i { display: block; background: var(--green); height: 100%; transform-origin: left; }
+.pca-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.pca-controls button { font-size: 14px; padding: 10px 14px; width: auto; min-height: 44px; }
+.pca-page .pca-progress-label { display: flex; justify-content: space-between; margin-top: 15px; }
+.pca-page input[type='range'] { width: 100%; min-height: 28px; accent-color: var(--green); }
+.pca-scatter-panel svg { width: 100%; height: auto; display: block; margin-top: 16px; overflow: visible; }
+.pca-scatter-panel svg text { font-family: inherit; }
+.pca-scatter-panel svg text:not([fill]) { fill: var(--ink); }
+.pca-legend { display: flex; flex-wrap: wrap; gap: 18px; margin: 8px 0; font-size: 14px; }
+.pca-legend span { display: flex; align-items: center; gap: 6px; }
+.pca-legend i { width: 10px; height: 10px; border-radius: 50%; background: var(--pca-color); }
+.pca-selection { background: var(--paper); border-radius: 8px; padding: 12px; font-size: 14px; margin: 15px 0 8px; min-height: 68px; }
+.pca-page .pca-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 16px 0; }
+.pca-metrics h4 { font-size: 16px; margin: 5px 0 10px; }
+.pca-metrics .metric { display: block; padding: 20px; }
+.pca-metrics .metric-value { color: var(--green); }
+.pca-metrics .metric p { font-size: 14px; }
+.pca-error-count { display: inline-block; margin-left: 12px; color: #53655e; }
+.pca-summary { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 600; }
+.pca-explanation { background: var(--mint); padding: 14px; border-radius: 8px; margin: 14px 0; }
+.pca-confusions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 12px; }
+.pca-confusions table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 14px; }
+.pca-confusions th, .pca-confusions td { padding: 8px; text-align: center; border: 1px solid var(--line); }
+.pca-confusions caption { font-weight: 600; padding: 8px; }
+.pca-diagonal { background: var(--mint); font-weight: 600; }
+.pca-page summary { cursor: pointer; font-size: 14px; }
+.pca-reading ol { margin: 12px 0; padding-left: 24px; }
+.pca-reading li { margin-bottom: 6px; }
+@media (max-width: 1050px) {
+  .pca-transform { grid-template-columns: minmax(0, 1fr) 16px 80px; }
+  .pca-feature { grid-template-columns: minmax(0, 1fr) 42px 38px; gap: 4px; }
+}
+@media (max-width: 760px) {
+  .pca-heading { flex-direction: column; gap: 8px; }
+  .pca-badge { margin: 0; }
+  .pca-workspace, .pca-confusions { grid-template-columns: minmax(0, 1fr); }
+  .pca-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pca-flow li { padding: 10px; }
+  .pca-page .panel { padding: 16px; }
+  .pca-card-heading { flex-wrap: wrap; gap: 6px; }
+  .pca-transform { grid-template-columns: minmax(0, 1fr) 18px 80px; }
+  .pca-page .pca-metrics { grid-template-columns: minmax(0, 1fr); }
+  .pca-controls { gap: 6px; }
+  .pca-controls button { padding: 9px 10px; }
+  .pca-feature { min-height: 33px; }
+  .pca-merge { height: 429px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pca-page *, .pca-page *::before, .pca-page *::after { transition: none !important; animation: none !important; }
+}
