@@ -22,7 +22,7 @@ test('navigation groups all nine algorithms into basic and applied rows', () => 
     '強化学習',
     'Association',
     '自然言語処理',
-    'Researcher',
+    '広告配信',
     'ブースティング',
   ]) {
     assert.match(applied, new RegExp(label));
@@ -36,9 +36,17 @@ test('navigation groups all nine algorithms into basic and applied rows', () => 
 });
 
 test('planned algorithms are visible but disabled until implemented', () => {
-  for (const label of ['次元圧縮', 'Researcher', 'ブースティング']) {
+  for (const label of ['次元圧縮', 'ブースティング']) {
     const button = html.match(new RegExp(`<button[^>]*disabled[^>]*>[\\s\\S]*?${label}[\\s\\S]*?</button`));
     assert.ok(button, `${label} should be a disabled navigation item`);
     assert.match(button[0], /準備中/);
   }
+});
+
+test('implemented advertising lesson is available from top navigation', () => {
+  const button = html.match(
+    /<button[^>]*id="adsTask"[^>]*>[\s\S]*?広告配信[\s\S]*?Thompson Sampling[\s\S]*?<\/button/,
+  );
+  assert.ok(button);
+  assert.doesNotMatch(button[0], /disabled|準備中/);
 });
