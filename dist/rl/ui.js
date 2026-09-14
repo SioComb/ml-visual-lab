@@ -5,6 +5,17 @@ import { environment, TrainingSession } from './session.js';
 import { random } from './random.js';
 import { chart } from './charts.js';
 import {
+  ThompsonExperiment,
+  THOMPSON_SCENARIOS,
+  AD_LABELS,
+} from './thompson.js';
+import {
+  adCards,
+  adDecisionView,
+  adDistributionView,
+  adLearningCharts,
+} from './ads-view.js';
+import {
   metric,
   banditView,
   mazeView,
@@ -30,14 +41,20 @@ const lessons = {
     'どのスロットを選ぶと報酬が増える？',
     'εを0から0.3に変え、同じSeedで比較してみましょう。探索すると未知のアームを試せますが、その瞬間の報酬を逃すこともあります。Greedyは推定値のみ、UCBは推定値と不確実性で選びます。',
   ],
-  maze: [
+  ads: [
     '02',
+    '広告配信',
+    'どの広告を表示すると、クリックが増える？',
+    'クリック率が分からない広告から、どれを表示するかを選びます。UCBのように推定値と探索ボーナスから決まるスコアを比べるのではなく、Thompson Samplingは各広告の確率分布から候補値を毎回1つずつ抽選し、今回の値が最大の広告を表示します。',
+  ],
+  maze: [
+    '03',
     'Q-learning迷路',
     '目先の報酬から、Goalまでの行動を学ぶ。',
     'バンディットのε-Greedyを、今度は各マスの行動選択に使います。探索はランダムな方向、活用は最大Q値の方向です。αは更新の大きさ、γは将来の報酬の重み。εを上げると探索が増えます。',
   ],
   snake: [
-    '03',
+    '04',
     'ヘビゲーム',
     'どの方向へ進めば、もっと長く生き残れる？',
     'ヘビゲームは状態の組み合わせが多すぎるため、盤面をそのままQ-learningで学習するのは現実的ではありません。そこで、周囲の危険・りんごの方向・進行方向だけを状態として使い、Q-tableで扱える大きさまで情報を圧縮しています。',
@@ -66,38 +83,117 @@ const BANDIT_FORMULA = {
   ucb: 'a = argmax [ Q(a) + √(2·ln t ÷ N(a)) ]\nQ(a) ← Q(a) + [Reward − Q(a)] ÷ N(a)\nt：総試行回数 ／ N(a)：アーム a の選択回数 ／ 探索Bonus = √(2·ln t ÷ N(a))',
 };
 
-export function initReinforcement() {
+export function initReinforcement(onLessonChange) {
   let kind = 'bandit',
     worker = null,
     timer = null,
     running = false,
     snapshot = null;
   let bandit,
+    ads,
     config,
     selected = 0,
     evaluation = null,
     pendingPlay = false,
     active = false;
   let comparisons = [];
+  let adCustom = THOMPSON_SCENARIOS.wide.probabilities.slice(0, 4),
+    adDraft = [...adCustom],
+    adDraftDirty = false,
+    distributionMode = 'current',
+    visibleAds = new Set([0, 1, 2, 3]),
+    batchRemaining = null,
+    animateDecision = false;
   const root = $('reinforcement');
   const robotAnimator = createRobotAnimator();
-  root.innerHTML = `<nav class="rl-lessons" aria-label="強化学習の学習順序">${Object.entries(
-    lessons,
-  )
-    .map(
-      ([key, [n, name]]) =>
-        `<button class="quiet" data-lesson="${key}" aria-pressed="false"><span>${n}</span> ${name}</button>`,
-    )
-    .join(
-      '<span class="rl-next" aria-hidden="true">→</span>',
-    )}</nav><div class="workspace rl-workspace"><aside class="settings"><section class="setting-section"><div class="section-title"><span class="step">01</span><h2>実験を設定する</h2></div><div id="rl-fields"></div><p class="field-help">速度以外の設定変更は学習をリセットします。同じSeed・設定で再現できます。</p></section><div class="train-area"><button id="rl-step" class="quiet">1ステップ</button><button id="rl-run" class="primary">▶ 自動実行</button><button id="rl-pause" class="quiet">一時停止</button><button id="rl-play" class="quiet">▷ Play / Evaluation</button><button id="rl-reset" class="quiet">リセット</button></div></aside><div class="results"><div class="result-heading"><div><div class="eyebrow">REINFORCEMENT LEARNING</div><h2 id="rl-title"></h2><p id="rl-subtitle"></p></div><span id="rl-status" class="status" role="status" aria-live="polite">準備完了</span></div><section class="panel rl-intro"><strong id="rl-algorithm"></strong><p id="rl-explanation"></p></section><div class="metrics rl-metrics" id="rl-metrics"></div><div class="rl-environment-grid"><section class="panel"><div class="rl-panel-heading"><h3>環境と行動</h3><label class="check" id="rl-overlay-label"><input id="rl-overlay" type="checkbox" checked> 方策を重ねる</label><label class="check" id="rl-reveal-label"><input id="rl-reveal" type="checkbox"> 真の確率を表示</label><button type="button" id="rl-shuffle" class="quiet" hidden>🎲 確率をシャッフル</button></div><div id="rl-board"></div><p id="rl-action" class="rl-action"></p><p id="rl-legend" class="field-help"></p></section><section class="panel" id="rl-detail"></section></div><section class="panel rl-learning"><h3>学習の結果</h3><p id="rl-progress" class="field-help"></p><div class="rl-charts" id="rl-charts"></div><div id="rl-comparison"></div></section><section class="panel rl-reading"><div class="eyebrow">READ THE LEARNING</div><h3>学習と再生を見比べよう</h3><p id="rl-reading"></p><p id="rl-update" class="rl-formula"></p></section></div></div>`;
+  root.innerHTML = `<div class="workspace rl-workspace"><aside class="settings"><section class="setting-section"><div class="section-title"><span class="step">01</span><h2>実験を設定する</h2></div><div id="rl-fields"></div><p class="field-help">速度以外の設定変更は学習をリセットします。同じSeed・設定で再現できます。</p></section><div class="train-area"><button id="rl-step" class="quiet">1ステップ</button><button id="rl-batch" class="quiet" hidden>+100回</button><button id="rl-run" class="primary">▶ 自動実行</button><button id="rl-pause" class="quiet">一時停止</button><button id="rl-play" class="quiet">▷ Play / Evaluation</button><button id="rl-reset" class="quiet">リセット</button></div></aside><div class="results"><div class="result-heading"><div><div class="eyebrow">REINFORCEMENT LEARNING</div><h2 id="rl-title"></h2><p id="rl-subtitle"></p></div><span id="rl-status" class="status" role="status" aria-live="polite">準備完了</span></div><section class="panel rl-intro"><strong id="rl-algorithm"></strong><p id="rl-explanation"></p></section><div class="metrics rl-metrics" id="rl-metrics"></div><div class="rl-environment-grid"><section class="panel"><div class="rl-panel-heading"><h3 id="rl-environment-title">環境と行動</h3><label class="check" id="rl-overlay-label"><input id="rl-overlay" type="checkbox" checked> 方策を重ねる</label><label class="check" id="rl-reveal-label"><input id="rl-reveal" type="checkbox"> 真の確率を表示</label><button type="button" id="rl-shuffle" class="quiet" hidden>🎲 確率をシャッフル</button></div><div id="rl-board"></div><div id="rl-action" class="rl-action"></div><p id="rl-legend" class="field-help"></p></section><section class="panel" id="rl-detail"></section></div><section class="panel rl-learning"><h3 id="rl-learning-title">学習の結果</h3><p id="rl-progress" class="field-help"></p><div class="rl-charts" id="rl-charts"></div><div id="rl-comparison"></div></section><section class="panel rl-reading"><div class="eyebrow">READ THE LEARNING</div><h3 id="rl-reading-title">学習と再生を見比べよう</h3><p id="rl-reading"></p><p id="rl-update" class="rl-formula"></p></section></div></div>`;
 
+  function adaptCustomProbabilities(arms) {
+    adCustom = adCustom.slice(0, arms);
+    while (adCustom.length < arms) adCustom.push(0.1);
+    adDraft = [...adCustom];
+    adDraftDirty = false;
+  }
+  function updateCustomEditor() {
+    const editor = $('rl-custom-ctr');
+    if (!editor) return;
+    editor.innerHTML = `<h3>カスタムCTR</h3><p class="field-help">編集中の値は「設定を適用」するまで学習に反映されません。</p>${adDraft
+      .map(
+        (probability, index) =>
+          `<div class="rl-ctr-field"><label for="rl-ctr-${index}">広告 ${AD_LABELS[index]}</label><input id="rl-ctr-range-${index}" data-ad-ctr-range="${index}" type="range" min="0" max="100" step="1" value="${Math.round(probability * 100)}"><input id="rl-ctr-${index}" data-ad-ctr="${index}" type="number" min="0" max="100" step="1" value="${Math.round(probability * 100)}" aria-label="広告 ${AD_LABELS[index]}の真のCTR（%）"><span>%</span></div>`,
+      )
+      .join(
+        '',
+      )}<button type="button" id="rl-apply-ctr" class="quiet">設定を適用</button>`;
+    const validateDraft = () => {
+      const inputs = [...editor.querySelectorAll('[data-ad-ctr]')];
+      $('rl-apply-ctr').disabled = inputs.some(
+        (input) => !input.checkValidity(),
+      );
+    };
+    for (const range of editor.querySelectorAll('[data-ad-ctr-range]'))
+      range.addEventListener('input', () => {
+        const index = Number(range.dataset.adCtrRange);
+        const input = $(`rl-ctr-${index}`);
+        input.value = range.value;
+        adDraft[index] = Number(range.value) / 100;
+        adDraftDirty = true;
+        $('rl-step').disabled =
+          $('rl-run').disabled =
+          $('rl-batch').disabled =
+            true;
+        $('rl-status').textContent = 'カスタムCTRは未適用';
+        validateDraft();
+      });
+    for (const input of editor.querySelectorAll('[data-ad-ctr]'))
+      input.addEventListener('input', () => {
+        const index = Number(input.dataset.adCtr);
+        if (input.checkValidity()) {
+          $(`rl-ctr-range-${index}`).value = input.value;
+          adDraft[index] = Number(input.value) / 100;
+        }
+        adDraftDirty = true;
+        $('rl-step').disabled =
+          $('rl-run').disabled =
+          $('rl-batch').disabled =
+            true;
+        $('rl-status').textContent = 'カスタムCTRは未適用';
+        validateDraft();
+      });
+    $('rl-apply-ctr').onclick = () => {
+      validateDraft();
+      if ($('rl-apply-ctr').disabled) return;
+      adCustom = [...adDraft];
+      adDraftDirty = false;
+      reset();
+      $('rl-status').textContent = 'カスタムCTRを適用';
+    };
+  }
   function settings() {
-    let html =
-      kind === 'bandit'
-        ? selectField('algorithm', 'アルゴリズム', BANDIT_NAMES) +
-          numberField('arms', 'スロット数', 3, 3, 5)
-        : '';
+    let html = '';
+    if (kind === 'bandit')
+      html =
+        selectField('algorithm', 'アルゴリズム', BANDIT_NAMES) +
+        numberField('arms', 'スロット数', 3, 3, 5);
+    if (kind === 'ads')
+      html =
+        selectField('arms', '広告数', {
+          3: '3種類',
+          4: '4種類',
+          5: '5種類',
+        }) +
+        selectField('scenario', 'CTRシナリオ', {
+          wide: '差が大きい',
+          close: '僅差',
+          equal: '全広告が同じ',
+          custom: 'カスタム',
+        }) +
+        '<div id="rl-custom-ctr" class="rl-custom-ctr" hidden></div>';
+    if (kind === 'maze' || kind === 'snake')
+      html += selectField('qLesson', '教材', {
+        maze: '迷路',
+        snake: 'ヘビゲーム',
+      });
     if (kind === 'maze')
       html +=
         selectField('preset', '迷路プリセット', {
@@ -107,26 +203,37 @@ export function initReinforcement() {
           random: 'ランダム迷路（Seedから生成）',
         }) +
         '<button type="button" id="rl-regenerate" class="quiet">↻ 迷路をランダムに再生成</button><p class="field-help">Goalへ進める配置を生成します。再生成はRandom Seedを更新し、学習をリセット。同じSeedなら同じ配置になります。</p>';
-    if (kind !== 'bandit')
+    if (kind === 'maze' || kind === 'snake')
       html +=
         numberField('alpha', 'α · 学習率', 0.3, 0, 1, 0.05) +
         numberField('gamma', 'γ · 割引率', 0.95, 0, 1, 0.05);
-    html += numberField(
-      'epsilon',
-      'ε · 探索率',
-      kind === 'bandit' ? 0.1 : 0.2,
-      0,
-      1,
-      0.05,
-    );
+    if (kind !== 'ads')
+      html += numberField(
+        'epsilon',
+        'ε · 探索率',
+        kind === 'bandit' ? 0.1 : 0.2,
+        0,
+        1,
+        0.05,
+      );
     html += numberField(
       'limit',
-      kind === 'bandit' ? '試行回数' : 'Episode数',
-      kind === 'bandit' ? 500 : kind === 'maze' ? 500 : 2000,
+      kind === 'bandit'
+        ? '試行回数'
+        : kind === 'ads'
+          ? '試行上限'
+          : 'Episode数',
+      kind === 'bandit'
+        ? 500
+        : kind === 'ads'
+          ? 1000
+          : kind === 'maze'
+            ? 500
+            : 2000,
       1,
       10000,
     );
-    if (kind !== 'bandit')
+    if (kind === 'maze' || kind === 'snake')
       html += numberField(
         'maxSteps',
         '1 Episodeの最大step数',
@@ -136,8 +243,10 @@ export function initReinforcement() {
       );
     html += selectField(
       'speed',
-      kind === 'bandit' ? '実行速度' : '学習速度（約80msごとのEpisode上限）',
-      kind === 'bandit'
+      kind === 'bandit' || kind === 'ads'
+        ? '実行速度'
+        : '学習速度（約80msごとのEpisode上限）',
+      kind === 'bandit' || kind === 'ads'
         ? {
             1: 'ゆっくり · 2回/秒',
             10: '標準 · 20回/秒',
@@ -148,6 +257,11 @@ export function initReinforcement() {
     html += numberField('seed', 'Random Seed', 42, 0, 4294967295);
     $('rl-fields').innerHTML = html;
     if (kind === 'bandit') $('rl-algorithm').value = 'epsilon';
+    if (kind === 'ads') {
+      $('rl-arms').value = '4';
+      $('rl-scenario').value = 'wide';
+    }
+    if (kind === 'maze' || kind === 'snake') $('rl-qLesson').value = kind;
     $('rl-speed').value = '10';
     if (kind === 'maze')
       $('rl-regenerate').onclick = () => {
@@ -164,43 +278,88 @@ export function initReinforcement() {
       };
     // Algorithm select and algorithm description use distinct IDs.
     for (const input of $('rl-fields').querySelectorAll('input, select')) {
-      if (input.id === 'rl-speed')
+      if (input.id === 'rl-qLesson')
+        input.addEventListener('change', () => {
+          lesson(input.value);
+          onLessonChange?.(input.value);
+        });
+      else if (input.id === 'rl-speed')
         input.addEventListener('change', () => {
           config.speed = Number(input.value);
-          if (running && kind !== 'bandit' && !evaluation)
+          if (running && kind !== 'bandit' && kind !== 'ads' && !evaluation)
             worker?.postMessage({
               type: 'train',
               episodes: config.limit,
               speed: config.speed,
             });
         });
+      else if (kind === 'ads' && input.id === 'rl-arms')
+        input.addEventListener('change', () => {
+          adaptCustomProbabilities(Number(input.value));
+          visibleAds = new Set(
+            Array.from({ length: Number(input.value) }, (_, index) => index),
+          );
+          updateCustomEditor();
+          reset();
+        });
+      else if (kind === 'ads' && input.id === 'rl-scenario')
+        input.addEventListener('change', () => {
+          adDraft = [...adCustom];
+          adDraftDirty = false;
+          updateCustomEditor();
+          reset();
+        });
       else input.addEventListener('change', reset);
     }
+    if (kind === 'ads') updateCustomEditor();
   }
   function readConfig() {
     for (const input of $('rl-fields').querySelectorAll('input'))
-      if (!input.checkValidity()) {
+      if (!input.matches('[data-ad-ctr]') && !input.checkValidity()) {
         input.reportValidity();
         return null;
       }
     const value = (id) => Number($('rl-' + id)?.value);
-    return {
+    if (kind === 'ads' && $('rl-scenario').value === 'custom' && adDraftDirty) {
+      const invalid = $('rl-custom-ctr').querySelector('[data-ad-ctr]:invalid');
+      if (invalid) invalid.reportValidity();
+      $('rl-status').textContent = 'カスタムCTRを適用してください';
+      return null;
+    }
+    const base = {
       seed: value('seed'),
-      epsilon: value('epsilon'),
-      alpha: value('alpha'),
-      gamma: value('gamma'),
-      arms: value('arms'),
-      algorithm: $('rl-algorithm')?.value,
-      preset: $('rl-preset')?.value ?? 'basic',
-      maxSteps: value('maxSteps'),
       limit: value('limit'),
       speed: value('speed'),
     };
+    if (kind === 'bandit')
+      Object.assign(base, {
+        epsilon: value('epsilon'),
+        arms: value('arms'),
+        algorithm: $('rl-algorithm').value,
+      });
+    if (kind === 'ads') {
+      base.arms = value('arms');
+      const scenario = $('rl-scenario').value;
+      base.scenario = scenario;
+      base.probabilities =
+        scenario === 'custom'
+          ? [...adCustom]
+          : THOMPSON_SCENARIOS[scenario].probabilities.slice(0, base.arms);
+    } else if (kind !== 'bandit')
+      Object.assign(base, {
+        epsilon: value('epsilon'),
+        alpha: value('alpha'),
+        gamma: value('gamma'),
+        preset: $('rl-preset')?.value ?? 'basic',
+        maxSteps: value('maxSteps'),
+      });
+    return base;
   }
   function stop() {
     clearTimeout(timer);
     timer = null;
     running = false;
+    batchRemaining = null;
     pendingPlay = false;
     if (worker) worker.postMessage({ type: 'pause' });
   }
@@ -218,7 +377,11 @@ export function initReinforcement() {
     selected = 0;
     robotAnimator.reset();
     if (kind === 'bandit') bandit = new Bandit(config);
-    else {
+    else if (kind === 'ads') {
+      ads = new ThompsonExperiment(config);
+      distributionMode = 'current';
+      animateDecision = false;
+    } else {
       snapshot = new TrainingSession(kind, config).snapshot();
       try {
         worker = new Worker(new URL('./worker.js', import.meta.url), {
@@ -268,20 +431,37 @@ export function initReinforcement() {
     $('rl-status').textContent = '準備完了';
     render();
   }
-  function banditTick() {
+  function simulationTick() {
     if (!running) return;
-    for (
-      let i = 0;
-      i < config.speed && bandit.history.length < config.limit;
-      i++
-    )
-      bandit.step();
-    if (bandit.history.length >= config.limit) {
+    const experiment = kind === 'ads' ? ads : bandit;
+    const remaining = config.limit - experiment.history.length;
+    const steps =
+      kind === 'ads' && batchRemaining !== null
+        ? Math.min(25, batchRemaining, remaining)
+        : Math.min(config.speed, remaining);
+    experiment.run
+      ? experiment.run(steps)
+      : Array.from({ length: steps }, () => experiment.step());
+    if (kind === 'ads' && batchRemaining !== null) batchRemaining -= steps;
+    if (experiment.history.length >= config.limit) {
       running = false;
-      $('rl-status').textContent = '試行完了';
+      batchRemaining = null;
+      $('rl-status').textContent = kind === 'ads' ? '上限に到達' : '試行完了';
+    } else if (
+      kind === 'ads' &&
+      batchRemaining !== null &&
+      batchRemaining <= 0
+    ) {
+      running = false;
+      batchRemaining = null;
+      $('rl-status').textContent = '+100回 完了';
     }
     render();
-    if (running) timer = setTimeout(banditTick, 500);
+    if (running)
+      timer = setTimeout(
+        simulationTick,
+        kind === 'ads' && batchRemaining !== null ? 0 : 500,
+      );
   }
   function startPlay() {
     const learner = new QLearner(config.alpha, config.gamma);
@@ -319,22 +499,35 @@ export function initReinforcement() {
     if (running) timer = setTimeout(playTick, 350);
   }
   function render() {
-    const isBandit = kind === 'bandit';
+    const isBandit = kind === 'bandit',
+      isAds = kind === 'ads',
+      isSimulation = isBandit || isAds;
     const focusedState = $('rl-board').contains(document.activeElement)
       ? document.activeElement.dataset.state
       : undefined;
     const tableScroll =
       $('rl-detail').querySelector('.rl-table-scroll')?.scrollTop ?? 0;
+    const progress = isBandit
+      ? bandit.history.length
+      : isAds
+        ? ads.trials
+        : snapshot.history.length;
+    const draftBlocked =
+      isAds && $('rl-scenario').value === 'custom' && adDraftDirty;
     $('rl-step').disabled =
       running ||
-      (!isBandit && !worker) ||
-      (isBandit
-        ? bandit.history.length >= config.limit
-        : snapshot.history.length >= config.limit);
+      draftBlocked ||
+      (!isSimulation && !worker) ||
+      progress >= config.limit;
     $('rl-run').disabled = $('rl-step').disabled;
-    $('rl-run').textContent = isBandit ? '▶ 自動実行' : '▶ Training / 学習';
+    $('rl-batch').hidden = !isAds;
+    $('rl-batch').disabled = $('rl-step').disabled;
+    $('rl-step').textContent = isAds ? '1回表示' : '1ステップ';
+    $('rl-run').textContent = isSimulation
+      ? '▶ 自動実行'
+      : '▶ Training / 学習';
     $('rl-pause').disabled = !running;
-    $('rl-play').hidden = isBandit;
+    $('rl-play').hidden = isSimulation;
     $('rl-play').disabled = running || !worker || !snapshot?.history.length;
     $('rl-play').textContent =
       evaluation && !evaluation.done
@@ -342,18 +535,97 @@ export function initReinforcement() {
         : '▷ Play / Evaluation';
     // ε only applies to ε-Greedy: hide the field (and its label) for Greedy/UCB.
     const noEpsilon = isBandit && config.algorithm !== 'epsilon';
-    $('rl-epsilon').disabled = noEpsilon;
-    $('rl-epsilon').hidden = noEpsilon;
+    if ($('rl-epsilon')) {
+      $('rl-epsilon').disabled = noEpsilon;
+      $('rl-epsilon').hidden = noEpsilon;
+    }
     const epsilonLabel = $('rl-fields').querySelector(
       'label[for="rl-epsilon"]',
     );
     if (epsilonLabel) epsilonLabel.hidden = noEpsilon;
     $('rl-overlay-label').hidden = kind !== 'maze';
-    $('rl-reveal-label').hidden = !isBandit;
+    $('rl-reveal-label').hidden = !isSimulation;
+    $('rl-reveal-label').lastChild.textContent = isAds
+      ? ' 真のCTRを表示'
+      : ' 真の確率を表示';
     $('rl-shuffle').hidden = !isBandit;
     $('rl-algorithm-name').textContent = isBandit
       ? `使用中：${BANDIT_NAMES[config.algorithm]}`
-      : `使用中：Q-learning + ε-Greedy${evaluation ? '（再生はε=0）' : ''}`;
+      : isAds
+        ? '使用中：Beta–Bernoulli Thompson Sampling'
+        : `使用中：Q-learning + ε-Greedy${evaluation ? '（再生はε=0）' : ''}`;
+    $('rl-environment-title').textContent = isAds
+      ? '広告カードと今回の判断'
+      : '環境と行動';
+    $('rl-learning-title').textContent = isAds ? '学習の推移' : '学習の結果';
+    $('rl-reading-title').textContent = isAds
+      ? 'Thompson Samplingの読み方'
+      : '学習と再生を見比べよう';
+    if ($('rl-custom-ctr'))
+      $('rl-custom-ctr').hidden = !(
+        isAds &&
+        $('rl-reveal').checked &&
+        $('rl-scenario').value === 'custom'
+      );
+    if (isAds) {
+      const reveal = $('rl-reveal').checked;
+      const ctr = ads.trials
+        ? `${((ads.totalClicks / ads.trials) * 100).toFixed(1)}%`
+        : '—';
+      const truthNote = '真のCTRを表示すると確認できます';
+      $('rl-metrics').innerHTML =
+        metric('表示回数', ads.trials, `/ ${config.limit}`) +
+        metric('クリック数', ads.totalClicks) +
+        metric('累積CTR', ctr) +
+        metric(
+          '累積期待後悔',
+          reveal ? ads.regret.toFixed(3) : '—',
+          reveal ? '期待CTRの差の累積' : truthNote,
+        ) +
+        metric(
+          '最適広告選択率',
+          reveal && ads.trials
+            ? `${((ads.optimalSelections / ads.trials) * 100).toFixed(1)}%`
+            : '—',
+          reveal ? (ads.trials ? '' : '未実行') : truthNote,
+        );
+      $('rl-board').innerHTML = adCards(ads, reveal);
+      $('rl-action').innerHTML = adDecisionView(ads, animateDecision);
+      animateDecision = false;
+      $('rl-detail').hidden = false;
+      $('rl-detail').innerHTML = adDistributionView(
+        ads,
+        distributionMode,
+        visibleAds,
+      );
+      $('rl-dist-current').onclick = () => {
+        distributionMode = 'current';
+        render();
+      };
+      $('rl-dist-trial').onclick = () => {
+        distributionMode = 'trial';
+        render();
+      };
+      for (const button of $('rl-detail').querySelectorAll('[data-ad-legend]'))
+        button.onclick = () => {
+          const index = Number(button.dataset.adLegend);
+          if (visibleAds.has(index)) visibleAds.delete(index);
+          else visibleAds.add(index);
+          render();
+        };
+      $('rl-legend').textContent =
+        'クリック +1 / クリックなし +0。枠と「今回表示」で直近の選択広告を示します。';
+      $('rl-explanation').textContent = lessons.ads[3];
+      $('rl-reading').textContent =
+        'UCBもThompson Samplingも、現在の推定とデータの少なさによる不確実性の両方を使う点は同じです。違いは広告の選び方です。UCBは推定値Q(a)に探索ボーナスを足したUCB Scoreを計算し、その時点でスコアが最大のアームを選びます。Thompson Samplingは各広告のBeta分布から候補値θを毎回抽選し、θが最大の広告を選びます。そのため、同じ学習状態でも抽選結果によって別の広告が選ばれることがあり、推定CTRが最大の広告を必ず選ぶわけではありません。εのような探索率は設定しません。';
+      $('rl-charts').innerHTML = adLearningCharts(ads, reveal);
+      $('rl-progress').textContent =
+        '累積クリック数と累積期待後悔は別の軸で表示します。長い履歴は描画時のみ間引きます。';
+      $('rl-comparison').hidden = true;
+      $('rl-update').textContent =
+        'θᵢ ~ Beta(αᵢ, βᵢ) ／ a = argmax θᵢ\nクリック：αₐ ← αₐ + 1\nクリックなし：βₐ ← βₐ + 1\nαᵢ = 1 + クリック数 ／ βᵢ = 1 + 表示回数 − クリック数';
+      return;
+    }
     const last = isBandit
       ? bandit.last
       : evaluation
@@ -478,43 +750,52 @@ export function initReinforcement() {
     worker?.terminate();
     worker = null;
     kind = next;
-    for (const button of root.querySelectorAll('[data-lesson]')) {
-      button.classList.toggle('active', button.dataset.lesson === kind);
-      button.setAttribute('aria-pressed', button.dataset.lesson === kind);
-    }
     $('rl-title').textContent = lessons[kind][1];
     $('rl-subtitle').textContent = lessons[kind][2];
     $('rl-explanation').textContent = lessons[kind][3];
     $('rl-reading').textContent =
       kind === 'bandit'
         ? 'ε=0では最初の偶然に引っぱられることがあります。εを増やした結果、UCBの結果も記録し、探索と活用の違いを比較しましょう。同値の最大Q値はランダムに選びます。'
-        : 'Trainingは高速にQ値を更新します。Play / Evaluationは学習済みのQ値を使ってゆっくり行動し、更新はしません。未学習・学習不足の方策はGoalに到達しないこともあります。εは自動減衰させず、設定した探索率の影響を比較できます。';
+        : kind === 'ads'
+          ? '最初はBeta(1,1)という一様な事前分布です。表示回数が少ないうちは分布が広く、結果が集まると推定が絞られます。'
+          : 'Trainingは高速にQ値を更新します。Play / Evaluationは学習済みのQ値を使ってゆっくり行動し、更新はしません。未学習・学習不足の方策はGoalに到達しないこともあります。εは自動減衰させず、設定した探索率の影響を比較できます。';
     settings();
     $('rl-reveal').checked = false;
     reset();
   }
   // Rename the descriptive element before inserting the algorithm select.
   $('rl-algorithm').id = 'rl-algorithm-name';
-  root
-    .querySelectorAll('[data-lesson]')
-    .forEach(
-      (button) => (button.onclick = () => lesson(button.dataset.lesson)),
-    );
   $('rl-step').onclick = () => {
     evaluation = null;
     if (!readConfig()) return;
     if (kind === 'bandit') {
       bandit.step();
       render();
+    } else if (kind === 'ads') {
+      ads.step();
+      animateDecision = true;
+      if (ads.trials >= config.limit) $('rl-status').textContent = '上限に到達';
+      else
+        $('rl-status').textContent =
+          `広告 ${AD_LABELS[ads.lastTrial.selectedIndex]} を表示`;
+      render();
     } else worker?.postMessage({ type: 'step' });
+  };
+  $('rl-batch').onclick = () => {
+    if (kind !== 'ads' || !readConfig()) return;
+    evaluation = null;
+    running = true;
+    batchRemaining = Math.min(100, config.limit - ads.trials);
+    $('rl-status').textContent = '+100回 実行中';
+    simulationTick();
   };
   $('rl-run').onclick = () => {
     if (!readConfig()) return;
     evaluation = null;
     running = true;
     $('rl-status').textContent =
-      kind === 'bandit' ? '自動実行中' : 'Training · 学習中';
-    if (kind === 'bandit') banditTick();
+      kind === 'bandit' || kind === 'ads' ? '自動実行中' : 'Training · 学習中';
+    if (kind === 'bandit' || kind === 'ads') simulationTick();
     else {
       worker?.postMessage({
         type: 'train',
@@ -561,7 +842,8 @@ export function initReinforcement() {
     reset();
     $('rl-status').textContent = '確率をシャッフル · Seed ' + seed;
   };
-  $('rl-overlay').onchange = $('rl-reveal').onchange = render;
+  $('rl-overlay').onchange = render;
+  $('rl-reveal').onchange = render;
   $('rl-board').onclick = (event) => {
     const cell = event.target.closest('[data-state]');
     if (cell) {
@@ -578,6 +860,9 @@ export function initReinforcement() {
   });
   lesson(kind);
   return {
+    selectLesson(next) {
+      if (next !== kind) lesson(next);
+    },
     show() {
       active = true;
       root.hidden = false;
