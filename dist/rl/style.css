@@ -3,28 +3,6 @@
 #supervisedWorkspace[hidden] {
   display: none;
 }
-.rl-lessons {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-.rl-lessons button {
-  padding: 12px 20px;
-}
-.rl-lessons button span {
-  color: var(--muted);
-  margin-right: 8px;
-}
-.rl-lessons button.active {
-  background: #e6f2eb;
-  border-color: #248574;
-  color: #176c50;
-}
-.rl-next {
-  color: var(--muted);
-}
 .rl-workspace .settings {
   align-self: start;
 }
@@ -384,21 +362,6 @@
 @media (max-width: 760px) {
   .rl-charts {
     grid-template-columns: 1fr;
-  }
-  .rl-lessons {
-    gap: 7px;
-  }
-  .rl-lessons button {
-    flex: 1;
-    padding: 10px 7px;
-    font-size: 12px;
-  }
-  .rl-next {
-    display: none;
-  }
-  .rl-lessons button span {
-    display: block;
-    margin: 0;
   }
   .rl-workspace .settings {
     display: block;

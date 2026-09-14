@@ -106,16 +106,7 @@ export function initReinforcement(onLessonChange) {
     animateDecision = false;
   const root = $('reinforcement');
   const robotAnimator = createRobotAnimator();
-  root.innerHTML = `<nav class="rl-lessons" aria-label="強化学習の学習順序">${Object.entries(
-    lessons,
-  )
-    .map(
-      ([key, [n, name]]) =>
-        `<button class="quiet" data-lesson="${key}" aria-pressed="false"><span>${n}</span> ${name}</button>`,
-    )
-    .join(
-      '<span class="rl-next" aria-hidden="true">→</span>',
-    )}</nav><div class="workspace rl-workspace"><aside class="settings"><section class="setting-section"><div class="section-title"><span class="step">01</span><h2>実験を設定する</h2></div><div id="rl-fields"></div><p class="field-help">速度以外の設定変更は学習をリセットします。同じSeed・設定で再現できます。</p></section><div class="train-area"><button id="rl-step" class="quiet">1ステップ</button><button id="rl-batch" class="quiet" hidden>+100回</button><button id="rl-run" class="primary">▶ 自動実行</button><button id="rl-pause" class="quiet">一時停止</button><button id="rl-play" class="quiet">▷ Play / Evaluation</button><button id="rl-reset" class="quiet">リセット</button></div></aside><div class="results"><div class="result-heading"><div><div class="eyebrow">REINFORCEMENT LEARNING</div><h2 id="rl-title"></h2><p id="rl-subtitle"></p></div><span id="rl-status" class="status" role="status" aria-live="polite">準備完了</span></div><section class="panel rl-intro"><strong id="rl-algorithm"></strong><p id="rl-explanation"></p></section><div class="metrics rl-metrics" id="rl-metrics"></div><div class="rl-environment-grid"><section class="panel"><div class="rl-panel-heading"><h3 id="rl-environment-title">環境と行動</h3><label class="check" id="rl-overlay-label"><input id="rl-overlay" type="checkbox" checked> 方策を重ねる</label><label class="check" id="rl-reveal-label"><input id="rl-reveal" type="checkbox"> 真の確率を表示</label><button type="button" id="rl-shuffle" class="quiet" hidden>🎲 確率をシャッフル</button></div><div id="rl-board"></div><div id="rl-action" class="rl-action"></div><p id="rl-legend" class="field-help"></p></section><section class="panel" id="rl-detail"></section></div><section class="panel rl-learning"><h3 id="rl-learning-title">学習の結果</h3><p id="rl-progress" class="field-help"></p><div class="rl-charts" id="rl-charts"></div><div id="rl-comparison"></div></section><section class="panel rl-reading"><div class="eyebrow">READ THE LEARNING</div><h3 id="rl-reading-title">学習と再生を見比べよう</h3><p id="rl-reading"></p><p id="rl-update" class="rl-formula"></p></section></div></div>`;
+  root.innerHTML = `<div class="workspace rl-workspace"><aside class="settings"><section class="setting-section"><div class="section-title"><span class="step">01</span><h2>実験を設定する</h2></div><div id="rl-fields"></div><p class="field-help">速度以外の設定変更は学習をリセットします。同じSeed・設定で再現できます。</p></section><div class="train-area"><button id="rl-step" class="quiet">1ステップ</button><button id="rl-batch" class="quiet" hidden>+100回</button><button id="rl-run" class="primary">▶ 自動実行</button><button id="rl-pause" class="quiet">一時停止</button><button id="rl-play" class="quiet">▷ Play / Evaluation</button><button id="rl-reset" class="quiet">リセット</button></div></aside><div class="results"><div class="result-heading"><div><div class="eyebrow">REINFORCEMENT LEARNING</div><h2 id="rl-title"></h2><p id="rl-subtitle"></p></div><span id="rl-status" class="status" role="status" aria-live="polite">準備完了</span></div><section class="panel rl-intro"><strong id="rl-algorithm"></strong><p id="rl-explanation"></p></section><div class="metrics rl-metrics" id="rl-metrics"></div><div class="rl-environment-grid"><section class="panel"><div class="rl-panel-heading"><h3 id="rl-environment-title">環境と行動</h3><label class="check" id="rl-overlay-label"><input id="rl-overlay" type="checkbox" checked> 方策を重ねる</label><label class="check" id="rl-reveal-label"><input id="rl-reveal" type="checkbox"> 真の確率を表示</label><button type="button" id="rl-shuffle" class="quiet" hidden>🎲 確率をシャッフル</button></div><div id="rl-board"></div><div id="rl-action" class="rl-action"></div><p id="rl-legend" class="field-help"></p></section><section class="panel" id="rl-detail"></section></div><section class="panel rl-learning"><h3 id="rl-learning-title">学習の結果</h3><p id="rl-progress" class="field-help"></p><div class="rl-charts" id="rl-charts"></div><div id="rl-comparison"></div></section><section class="panel rl-reading"><div class="eyebrow">READ THE LEARNING</div><h3 id="rl-reading-title">学習と再生を見比べよう</h3><p id="rl-reading"></p><p id="rl-update" class="rl-formula"></p></section></div></div>`;
 
   function adaptCustomProbabilities(arms) {
     adCustom = adCustom.slice(0, arms);
@@ -198,6 +189,11 @@ export function initReinforcement(onLessonChange) {
           custom: 'カスタム',
         }) +
         '<div id="rl-custom-ctr" class="rl-custom-ctr" hidden></div>';
+    if (kind === 'maze' || kind === 'snake')
+      html += selectField('qLesson', '教材', {
+        maze: '迷路',
+        snake: 'ヘビゲーム',
+      });
     if (kind === 'maze')
       html +=
         selectField('preset', '迷路プリセット', {
@@ -265,6 +261,7 @@ export function initReinforcement(onLessonChange) {
       $('rl-arms').value = '4';
       $('rl-scenario').value = 'wide';
     }
+    if (kind === 'maze' || kind === 'snake') $('rl-qLesson').value = kind;
     $('rl-speed').value = '10';
     if (kind === 'maze')
       $('rl-regenerate').onclick = () => {
@@ -281,7 +278,12 @@ export function initReinforcement(onLessonChange) {
       };
     // Algorithm select and algorithm description use distinct IDs.
     for (const input of $('rl-fields').querySelectorAll('input, select')) {
-      if (input.id === 'rl-speed')
+      if (input.id === 'rl-qLesson')
+        input.addEventListener('change', () => {
+          lesson(input.value);
+          onLessonChange?.(input.value);
+        });
+      else if (input.id === 'rl-speed')
         input.addEventListener('change', () => {
           config.speed = Number(input.value);
           if (running && kind !== 'bandit' && kind !== 'ads' && !evaluation)
@@ -748,10 +750,6 @@ export function initReinforcement(onLessonChange) {
     worker?.terminate();
     worker = null;
     kind = next;
-    for (const button of root.querySelectorAll('[data-lesson]')) {
-      button.classList.toggle('active', button.dataset.lesson === kind);
-      button.setAttribute('aria-pressed', button.dataset.lesson === kind);
-    }
     $('rl-title').textContent = lessons[kind][1];
     $('rl-subtitle').textContent = lessons[kind][2];
     $('rl-explanation').textContent = lessons[kind][3];
@@ -767,12 +765,6 @@ export function initReinforcement(onLessonChange) {
   }
   // Rename the descriptive element before inserting the algorithm select.
   $('rl-algorithm').id = 'rl-algorithm-name';
-  root.querySelectorAll('[data-lesson]').forEach((button) => {
-    button.onclick = () => {
-      lesson(button.dataset.lesson);
-      onLessonChange?.(button.dataset.lesson);
-    };
-  });
   $('rl-step').onclick = () => {
     evaluation = null;
     if (!readConfig()) return;

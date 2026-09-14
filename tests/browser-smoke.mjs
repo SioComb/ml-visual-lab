@@ -31,11 +31,12 @@ try {
   await page.locator('#adsTask').click();
   assert.equal(new URL(page.url()).hash, '#ads');
   assert.match(await page.locator('#rl-title').innerText(), /広告配信/);
-  assert.equal(await page.locator('[data-lesson="ads"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('#adsTask').getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('.rl-lessons').count(), 0);
   await page.locator('#qlearningTask').click();
   assert.equal(new URL(page.url()).hash, '#qlearning');
   assert.match(await page.locator('#rl-title').innerText(), /Q-learning迷路/);
-  assert.equal(await page.locator('[data-lesson="maze"]').getAttribute('aria-pressed'), 'true');
+  assert.equal(await page.locator('#rl-qLesson').inputValue(), 'maze');
   await page.locator('#rlTask').click();
   assert.equal(await page.locator('#supervisedWorkspace').isVisible(), false);
   assert.match(await page.locator('#rl-title').innerText(), /バンディット/);
@@ -67,7 +68,7 @@ try {
   await page.locator('#rl-speed').selectOption('50');
   assert.equal(await page.locator('#rl-metrics').innerText(), beforeSpeedChange);
   console.log('PASS Bandit algorithms, comparison, reset and pause');
-  await page.locator('[data-lesson="ads"]').click();
+  await page.locator('#adsTask').click();
   assert.equal(await page.locator('.rl-ad-card').count(), 4);
   assert.match(await page.locator('#rl-explanation').innerText(), /UCB.*探索ボーナス/);
   assert.match(await page.locator('#rl-reading').innerText(), /UCB Score.*Beta分布/);
@@ -117,7 +118,7 @@ try {
   assert.match(await page.locator('.rl-ad-card').nth(4).innerText(), /真のCTR\s+10%/);
   await page.screenshot({ path: '.cache/qa/screenshots/thompson.png', fullPage: true });
   console.log('PASS Thompson Sampling cards, posterior, limits, custom CTR and reproducibility');
-  await page.locator('[data-lesson="maze"]').click();
+  await page.locator('#qlearningTask').click();
   await page.locator('#rl-speed').selectOption('50');
   await page.locator('#rl-run').click();
   await waitForText('#rl-status', '学習完了');
@@ -162,7 +163,7 @@ try {
   await page.locator('#rl-preset').selectOption('basic');
   assert.notDeepEqual(await layout(), generated);
   console.log('PASS random regeneration during training/replay, Seed reproducibility, reset and Goal arrival');
-  await page.locator('[data-lesson="snake"]').click();
+  await page.locator('#rl-qLesson').selectOption('snake');
   await number('limit', 100);
   await page.locator('#rl-speed').selectOption('50');
   await page.locator('#rl-run').click(); await waitForText('#rl-status', '学習完了');
@@ -175,9 +176,14 @@ try {
   // The accessible length includes the head and the two initial body segments.
   assert.match(await page.locator('#rl-board [role="img"]').getAttribute('aria-label'), /Score 0、長さ 3$/);
   await page.setViewportSize({ width: 390, height: 844 });
-  for (const kind of ['bandit', 'ads', 'maze', 'snake']) {
-    await page.locator(`[data-lesson="${kind}"]`).click();
-    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${kind} should fit mobile width`);
+  for (const [label, navigate] of [
+    ['bandit', () => page.locator('#rlTask').click()],
+    ['ads', () => page.locator('#adsTask').click()],
+    ['maze', () => page.locator('#qlearningTask').click()],
+    ['snake', () => page.locator('#rl-qLesson').selectOption('snake')],
+  ]) {
+    await navigate();
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `${label} should fit mobile width`);
   }
   await page.screenshot({ path: '.cache/qa/screenshots/mobile.png', fullPage: true });
   await page.locator('#regTask').click(); await trainExisting();

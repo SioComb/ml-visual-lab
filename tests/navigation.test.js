@@ -47,6 +47,6 @@ test('implemented advertising lesson is available from top navigation', () => {
 });
 
 test('Bandit and Q-Learning have direct top-navigation targets', () => {
-  assert.match(html, /id="rlTask"[\s\S]*?Bandit Algorism/);
-  assert.match(html, /id="qlearningTask"[\s\S]*?Q-Learning/);
+  assert.match(html, /id="rlTask"[\s\S]*?Bandit Algorism[\s\S]*?01 バンディット/);
+  assert.match(html, /id="qlearningTask"[\s\S]*?Q-Learning[\s\S]*?迷路とヘビゲーム/);
 });
