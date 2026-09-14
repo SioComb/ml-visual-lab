@@ -165,9 +165,7 @@ small {
   font-size: 13px;
 }
 .page-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
   gap: 25px;
   margin: 36px 0 28px;
 }
@@ -223,6 +221,45 @@ main {
   background: var(--white);
   box-shadow: 0 2px 5px #1a382712;
   color: var(--green);
+}
+.algorithm-catalog {
+  display: grid;
+  gap: 12px;
+}
+.algorithm-group {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 12px;
+}
+.algorithm-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 8px 2px;
+}
+.algorithm-group-heading h2 {
+  font-size: 15px;
+  line-height: 1.4;
+}
+.algorithm-group-heading p {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.algorithm-group-number {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+}
+.task-switch button:disabled {
+  cursor: default;
+  opacity: 0.58;
+  filter: none;
+}
+.task-switch button:disabled small {
+  color: #8a7160;
 }
 .workspace {
   display: grid;
@@ -888,6 +925,9 @@ dialog li p,
   .page-heading {
     align-items: flex-start;
   }
+  .algorithm-group {
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
   h1 {
     font-size: 25px;
   }
@@ -951,7 +991,6 @@ dialog li p,
   }
   .page-heading {
     margin: 25px 0 22px;
-    flex-direction: column;
     gap: 19px;
   }
   h1 {
@@ -963,6 +1002,20 @@ dialog li p,
   }
   .task-switch {
     width: 100%;
+  }
+  .algorithm-catalog {
+    width: 100%;
+    gap: 17px;
+  }
+  .algorithm-group {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+  .algorithm-group-heading {
+    padding: 0 3px;
+  }
+  .algorithm-group-heading p {
+    display: none;
   }
   .task-switch button {
     width: 50%;
@@ -1481,15 +1534,15 @@ dialog li p,
   font-size: 12px;
 }
 
-/* Shared navigation: all learning modes use the same wrapping button row. */
+/* Shared navigation: each algorithm group uses a wrapping button row. */
 .task-switch {
   flex-wrap: wrap;
 }
 .task-switch button {
-  flex: 1;
+  flex: 1 1 150px;
 }
 @media (max-width: 760px) {
-  .task-switch:has(#assocTask) button {
+  .task-switch button {
     flex: 1 1 100px;
   }
 }

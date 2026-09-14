@@ -33,21 +33,54 @@
           ><div class="eyebrow">THE MACHINE LEARNING PLAYGROUND</div
           ><h1>データから、モデルを見つけよう。</h1
           ><p>条件を変えて学習し、予測の仕組みを目で確かめる。</p></div
-        ><div class="task-switch" role="group" aria-label="学習の種類"
-          ><button id="regTask" class="active" aria-pressed="true"
-            ><span>📈</span> 回帰 <small>教師あり</small></button
-          ><button id="clsTask" aria-pressed="false"
-            ><span>🗃️</span> 分類 <small>教師あり</small></button
-          ><button id="clusterTask" aria-pressed="false"
-            ><span>🫧</span> ｸﾗｽﾘﾝｸﾞ <small>教師なし</small></button
-          ><button id="rlTask" aria-pressed="false"
-            ><span>🤖</span> 強化学習 <small>報酬で学ぶ</small></button
-          ><button id="assocTask" type="button" aria-pressed="false"
-            ><span>🛒</span> Associon
-            <small>購買パターン</small></button
-          ><button id="nlpTask" type="button" aria-pressed="false"
-            ><span>💬</span> 自然言語処理 <small>Bag of Words</small></button
-          ></div
+        ><nav class="algorithm-catalog" aria-label="アルゴリズム一覧"
+          ><section
+            class="algorithm-group"
+            aria-labelledby="basicAlgorithmsTitle"
+            ><div class="algorithm-group-heading"
+              ><span class="algorithm-group-number">01</span
+              ><div
+                ><h2 id="basicAlgorithmsTitle">基礎アルゴリズム</h2
+                ><p>機械学習の基本的な考え方を学ぶ</p></div
+              ></div
+            ><div class="task-switch" role="group" aria-label="基礎アルゴリズム"
+              ><button id="regTask" class="active" aria-pressed="true"
+                ><span>📈</span> 回帰モデル <small>教師あり</small></button
+              ><button id="clsTask" aria-pressed="false"
+                ><span>🗃️</span> 分類モデル <small>教師あり</small></button
+              ><button id="clusterTask" aria-pressed="false"
+                ><span>🫧</span> クラスタリング
+                <small>教師なし</small></button
+              ><button type="button" disabled
+                ><span>📐</span> 次元圧縮 <small>準備中</small></button
+              ></div
+            ></section
+          ><section
+            class="algorithm-group"
+            aria-labelledby="appliedAlgorithmsTitle"
+            ><div class="algorithm-group-heading"
+              ><span class="algorithm-group-number">02</span
+              ><div
+                ><h2 id="appliedAlgorithmsTitle">応用アルゴリズム</h2
+                ><p>基礎を組み合わせて実践的な課題を解く</p></div
+              ></div
+            ><div class="task-switch" role="group" aria-label="応用アルゴリズム"
+              ><button id="rlTask" aria-pressed="false"
+                ><span>🤖</span> 強化学習 <small>報酬で学ぶ</small></button
+              ><button id="assocTask" type="button" aria-pressed="false"
+                ><span>🛒</span> Association
+                <small>購買パターン</small></button
+              ><button type="button" disabled
+                ><span>📰</span> Researcher
+                <small>Thompson Sampling・準備中</small></button
+              ><button type="button" disabled
+                ><span>🚀</span> ブースティング
+                <small>準備中</small></button
+              ><button id="nlpTask" type="button" aria-pressed="false"
+                ><span>💬</span> 自然言語処理 <small>Bag of Words</small></button
+              ></div
+            ></section
+          ></nav
         ></section
       >
       <div class="workspace" id="supervisedWorkspace"
