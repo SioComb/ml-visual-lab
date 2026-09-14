@@ -909,6 +909,7 @@ const viewButtons = {
   classification: 'clsTask',
   clustering: 'clusterTask',
   reinforcement: 'rlTask',
+  ads: 'adsTask',
   association: 'assocTask',
   nlp: 'nlpTask',
 };
@@ -924,7 +925,7 @@ function viewFromHash() {
 
 function activateView(next, syncHistory = true) {
   if (next === activeView) return;
-  if (activeView === 'reinforcement') reinforcement.hide();
+  if (['reinforcement', 'ads'].includes(activeView)) reinforcement.hide();
   if (activeView === 'association') association.hide();
   if (activeView === 'nlp') nlp.hide();
   if (busy && ['association', 'nlp'].includes(next)) markDirty();
@@ -939,8 +940,18 @@ function activateView(next, syncHistory = true) {
   } else if (next === 'association') {
     association ??= initAssociation();
     association.show();
-  } else if (next === 'reinforcement') {
-    reinforcement ??= initReinforcement();
+  } else if (next === 'reinforcement' || next === 'ads') {
+    reinforcement ??= initReinforcement((lesson) => {
+      const reinforcementView = lesson === 'ads' ? 'ads' : 'reinforcement';
+      activeView = reinforcementView;
+      for (const [view, id] of Object.entries(viewButtons)) {
+        $(id).classList.toggle('active', view === reinforcementView);
+        $(id).setAttribute('aria-pressed', String(view === reinforcementView));
+      }
+      if (location.hash !== `#${reinforcementView}`)
+        history.pushState(null, '', `#${reinforcementView}`);
+    });
+    reinforcement.selectLesson(next === 'ads' ? 'ads' : 'bandit');
     reinforcement.show();
   } else {
     switchTask(next);
