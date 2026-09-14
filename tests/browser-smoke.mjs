@@ -32,6 +32,10 @@ try {
   assert.equal(new URL(page.url()).hash, '#ads');
   assert.match(await page.locator('#rl-title').innerText(), /広告配信/);
   assert.equal(await page.locator('[data-lesson="ads"]').getAttribute('aria-pressed'), 'true');
+  await page.locator('#qlearningTask').click();
+  assert.equal(new URL(page.url()).hash, '#qlearning');
+  assert.match(await page.locator('#rl-title').innerText(), /Q-learning迷路/);
+  assert.equal(await page.locator('[data-lesson="maze"]').getAttribute('aria-pressed'), 'true');
   await page.locator('#rlTask').click();
   assert.equal(await page.locator('#supervisedWorkspace').isVisible(), false);
   assert.match(await page.locator('#rl-title').innerText(), /バンディット/);

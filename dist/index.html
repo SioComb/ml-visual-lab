@@ -40,14 +40,14 @@
             ><div class="algorithm-group-heading"
               ><span class="algorithm-group-number">01</span
               ><div
-                ><h2 id="basicAlgorithmsTitle">基礎アルゴリズム</h2
+                ><h2 id="basicAlgorithmsTitle">基本アルゴリズム</h2
                 ><p>機械学習の基本的な考え方を学ぶ</p></div
               ></div
-            ><div class="task-switch" role="group" aria-label="基礎アルゴリズム"
+            ><div class="task-switch" role="group" aria-label="基本アルゴリズム"
               ><button id="regTask" class="active" aria-pressed="true"
-                ><span>📈</span> 回帰モデル <small>教師あり</small></button
+                ><span>📈</span> 回帰 <small>教師あり</small></button
               ><button id="clsTask" aria-pressed="false"
-                ><span>🗃️</span> 分類モデル <small>教師あり</small></button
+                ><span>🗃️</span> 分類 <small>教師あり</small></button
               ><button id="clusterTask" aria-pressed="false"
                 ><span>🫧</span> クラスタリング
                 <small>教師なし</small></button
@@ -57,27 +57,43 @@
             ></section
           ><section
             class="algorithm-group"
-            aria-labelledby="appliedAlgorithmsTitle"
+            aria-labelledby="explorationAlgorithmsTitle"
             ><div class="algorithm-group-heading"
               ><span class="algorithm-group-number">02</span
               ><div
-                ><h2 id="appliedAlgorithmsTitle">応用アルゴリズム</h2
-                ><p>基礎を組み合わせて実践的な課題を解く</p></div
+                ><h2 id="explorationAlgorithmsTitle">強化学習・探索</h2
+                ><p>行動と報酬からよりよい選択を学ぶ</p></div
               ></div
-            ><div class="task-switch" role="group" aria-label="応用アルゴリズム"
+            ><div class="task-switch" role="group" aria-label="強化学習・探索"
               ><button id="rlTask" aria-pressed="false"
-                ><span>🤖</span> 強化学習 <small>報酬で学ぶ</small></button
+                ><span>🎰</span> Bandit Algorism
+                <small>Greedy・ε-Greedy・UCB</small></button
+              ><button id="adsTask" type="button" aria-pressed="false"
+                ><span>📰</span> Thompson Sampling
+                <small>広告配信</small></button
+              ><button id="qlearningTask" type="button" aria-pressed="false"
+                ><span>🧩</span> Q-Learning
+                <small>迷路・ヘビゲーム</small></button
+              ></div
+            ></section
+          ><section
+            class="algorithm-group"
+            aria-labelledby="advancedAlgorithmsTitle"
+            ><div class="algorithm-group-heading"
+              ><span class="algorithm-group-number">03</span
+              ><div
+                ><h2 id="advancedAlgorithmsTitle">発展・応用</h2
+                ><p>基本を組み合わせて実践的な課題を解く</p></div
+              ></div
+            ><div class="task-switch" role="group" aria-label="発展・応用"
               ><button id="assocTask" type="button" aria-pressed="false"
                 ><span>🛒</span> Association
                 <small>購買パターン</small></button
-              ><button id="adsTask" type="button" aria-pressed="false"
-                ><span>📰</span> 広告配信
-                <small>Thompson Sampling</small></button
-              ><button type="button" disabled
-                ><span>🚀</span> ブースティング
-                <small>準備中</small></button
               ><button id="nlpTask" type="button" aria-pressed="false"
-                ><span>💬</span> 自然言語処理 <small>Bag of Words</small></button
+                ><span>💬</span> NLP <small>Bag of Words</small></button
+              ><button type="button" disabled
+                ><span>🚀</span> Boosting
+                <small>準備中</small></button
               ></div
             ></section
           ></nav

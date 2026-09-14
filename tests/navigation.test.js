@@ -11,32 +11,27 @@ function section(id) {
   return html.slice(start, end);
 }
 
-test('navigation groups all nine algorithms into basic and applied rows', () => {
+test('navigation groups ten algorithms into basic, exploration, and advanced rows', () => {
   const basic = section('basicAlgorithmsTitle');
-  const applied = section('appliedAlgorithmsTitle');
+  const exploration = section('explorationAlgorithmsTitle');
+  const advanced = section('advancedAlgorithmsTitle');
 
   for (const label of ['回帰', '分類', 'クラスタリング', '次元圧縮']) {
     assert.match(basic, new RegExp(label));
   }
-  for (const label of [
-    '強化学習',
-    'Association',
-    '自然言語処理',
-    '広告配信',
-    'ブースティング',
-  ]) {
-    assert.match(applied, new RegExp(label));
-  }
+  for (const label of ['Bandit Algorism', 'Thompson Sampling', 'Q-Learning'])
+    assert.match(exploration, new RegExp(label));
+  for (const label of ['Association', 'NLP', 'Boosting'])
+    assert.match(advanced, new RegExp(label));
   assert.equal((basic.match(/<button/g) ?? []).length, 4);
-  assert.equal((applied.match(/<button/g) ?? []).length, 5);
-  assert.ok(
-    applied.indexOf('自然言語処理') > applied.indexOf('ブースティング'),
-    '自然言語処理 should be the final applied algorithm',
-  );
+  assert.equal((exploration.match(/<button/g) ?? []).length, 3);
+  assert.equal((advanced.match(/<button/g) ?? []).length, 3);
+  assert.ok(advanced.indexOf('Association') < advanced.indexOf('NLP'));
+  assert.ok(advanced.indexOf('NLP') < advanced.indexOf('Boosting'));
 });
 
 test('planned algorithms are visible but disabled until implemented', () => {
-  for (const label of ['次元圧縮', 'ブースティング']) {
+  for (const label of ['次元圧縮', 'Boosting']) {
     const button = html.match(new RegExp(`<button[^>]*disabled[^>]*>[\\s\\S]*?${label}[\\s\\S]*?</button`));
     assert.ok(button, `${label} should be a disabled navigation item`);
     assert.match(button[0], /準備中/);
@@ -45,8 +40,13 @@ test('planned algorithms are visible but disabled until implemented', () => {
 
 test('implemented advertising lesson is available from top navigation', () => {
   const button = html.match(
-    /<button[^>]*id="adsTask"[^>]*>[\s\S]*?広告配信[\s\S]*?Thompson Sampling[\s\S]*?<\/button/,
+    /<button[^>]*id="adsTask"[^>]*>[\s\S]*?Thompson Sampling[\s\S]*?広告配信[\s\S]*?<\/button/,
   );
   assert.ok(button);
   assert.doesNotMatch(button[0], /disabled|準備中/);
+});
+
+test('Bandit and Q-Learning have direct top-navigation targets', () => {
+  assert.match(html, /id="rlTask"[\s\S]*?Bandit Algorism/);
+  assert.match(html, /id="qlearningTask"[\s\S]*?Q-Learning/);
 });

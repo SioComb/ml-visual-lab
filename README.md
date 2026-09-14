@@ -115,7 +115,7 @@ NLPのロジックは `npm test`、画面は既存の検証用Playwrightを使�
 
 ## Reinforcement Learning
 
-上部の「強化学習」から **Multi-Armed Bandit → 広告配信 → Q-learning迷路 → Snake** の順に体験できます。上部の「広告配信」からThompson Sampling教材を直接開くこともできます。データやCSVの用意は不要です。
+上部の「強化学習・探索」から **Bandit Algorism → Thompson Sampling → Q-Learning** を直接開けます。強化学習画面の教材ナビゲーションでは **Multi-Armed Bandit → 広告配信 → Q-learning迷路 → Snake** の順に体験できます。データやCSVの用意は不要です。
 
 | 教材 | 操作 | 学べること |
 | --- | --- | --- |

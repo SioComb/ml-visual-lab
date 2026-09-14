@@ -910,6 +910,7 @@ const viewButtons = {
   clustering: 'clusterTask',
   reinforcement: 'rlTask',
   ads: 'adsTask',
+  qlearning: 'qlearningTask',
   association: 'assocTask',
   nlp: 'nlpTask',
 };
@@ -925,7 +926,8 @@ function viewFromHash() {
 
 function activateView(next, syncHistory = true) {
   if (next === activeView) return;
-  if (['reinforcement', 'ads'].includes(activeView)) reinforcement.hide();
+  if (['reinforcement', 'ads', 'qlearning'].includes(activeView))
+    reinforcement.hide();
   if (activeView === 'association') association.hide();
   if (activeView === 'nlp') nlp.hide();
   if (busy && ['association', 'nlp'].includes(next)) markDirty();
@@ -940,9 +942,14 @@ function activateView(next, syncHistory = true) {
   } else if (next === 'association') {
     association ??= initAssociation();
     association.show();
-  } else if (next === 'reinforcement' || next === 'ads') {
+  } else if (['reinforcement', 'ads', 'qlearning'].includes(next)) {
     reinforcement ??= initReinforcement((lesson) => {
-      const reinforcementView = lesson === 'ads' ? 'ads' : 'reinforcement';
+      const reinforcementView =
+        lesson === 'ads'
+          ? 'ads'
+          : ['maze', 'snake'].includes(lesson)
+            ? 'qlearning'
+            : 'reinforcement';
       activeView = reinforcementView;
       for (const [view, id] of Object.entries(viewButtons)) {
         $(id).classList.toggle('active', view === reinforcementView);
@@ -951,7 +958,9 @@ function activateView(next, syncHistory = true) {
       if (location.hash !== `#${reinforcementView}`)
         history.pushState(null, '', `#${reinforcementView}`);
     });
-    reinforcement.selectLesson(next === 'ads' ? 'ads' : 'bandit');
+    reinforcement.selectLesson(
+      next === 'ads' ? 'ads' : next === 'qlearning' ? 'maze' : 'bandit',
+    );
     reinforcement.show();
   } else {
     switchTask(next);
