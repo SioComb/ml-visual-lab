@@ -65,6 +65,8 @@ try {
   console.log('PASS Bandit algorithms, comparison, reset and pause');
   await page.locator('[data-lesson="ads"]').click();
   assert.equal(await page.locator('.rl-ad-card').count(), 4);
+  assert.match(await page.locator('#rl-explanation').innerText(), /UCB.*探索ボーナス/);
+  assert.match(await page.locator('#rl-reading').innerText(), /UCB Score.*Beta分布/);
   assert.match(await page.locator('#rl-metrics').innerText(), /表示回数\s+0/);
   assert.match(await page.locator('#rl-detail').innerText(), /Beta\(1, 1\)/);
   assert.match(await page.locator('#rl-charts').innerText(), /累積期待後悔 · 真のCTRを表示/);
