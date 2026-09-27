@@ -7,7 +7,7 @@
       name="theme-color"
       content="#172d2b" /><meta
       name="description"
-      content="CSVで試せる機械学習の実験室。回帰・分類・教師なし学習を予測線、決定境界、樹形図で理解する。" /><title
+      content="CSVで試せる機械学習の実験室。回帰・分類・XGBoost・教師なし学習を予測線、決定境界、樹形図で理解する。" /><title
       >ML Visual Lab | 見てわかる機械学習</title
     ><link rel="stylesheet" href="./style.css" /><link
       rel="stylesheet"
@@ -16,6 +16,7 @@
       href="./association/style.css"
     /><link rel="stylesheet" href="./dimension/style.css"
     /><link rel="stylesheet" href="./nlp/style.css"
+    /><link rel="stylesheet" href="./boosting/style.css"
   /></head>
   <body>
     <header class="topbar"
@@ -92,9 +93,9 @@
                 <small>購買パターン</small></button
               ><button id="nlpTask" type="button" aria-pressed="false"
                 ><span>💬</span> NLP <small>Bag of Words</small></button
-              ><button type="button" disabled
+              ><button id="xgboostTask" type="button" aria-pressed="false"
                 ><span>🚀</span> Boosting
-                <small>準備中</small></button
+                <small>XGBoost</small></button
               ></div
             ></section
           ></nav
@@ -440,6 +441,7 @@
       ></section
       ><section id="pca" class="pca-page" hidden aria-label="次元圧縮 / PCA"></section
       ><section id="nlp" class="nlp-page" hidden aria-label="自然言語処理 / NLP"></section
+      ><section id="xgboost" class="xgboost-page" hidden aria-label="XGBoostの学習過程"></section
       ><footer
         ><span><b>ML Visual Lab</b> · 学んで、変えて、確かめる。</span
         ><span

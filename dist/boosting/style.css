@@ -1,0 +1,50 @@
+.xgboost-page { margin: 0 0 28px; min-width: 0; }
+.xgboost-page[hidden] { display: none; }
+.xgboost-page .xgboost-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 6px 0 18px; }
+.xgboost-page .xgboost-heading h2 { font-size: clamp(21px, 2.5vw, 28px); line-height: 1.4; }
+.xgboost-page .xgboost-heading p { color: var(--muted); font-size: 14px; }
+.xgboost-page .xgboost-badge { color: var(--green); background: var(--mint); border: 1px solid var(--line); padding: 6px 12px; border-radius: 99px; font-size: 12px; white-space: nowrap; }
+.xgboost-page .xgboost-status { padding: 8px 12px; color: var(--green); background: var(--mint); border-radius: 7px; font-size: 13px; margin-bottom: 15px; }
+.xgboost-page .xgboost-layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 27px; align-items: start; }
+.xgboost-page .xgboost-layout[hidden] { display: none; }
+.xgboost-page .xgboost-main { min-width: 0; }
+.xgboost-page .xgboost-settings select { margin-bottom: 12px; }
+.xgboost-page .xgboost-settings .field-help { overflow-wrap: anywhere; }
+.xgboost-page .xgboost-actions { display: grid; gap: 9px; }
+.xgboost-page .xgboost-actions .quiet { width: 100%; }
+.xgboost-page .xgboost-actions .text-button { justify-self: start; }
+.xgboost-page .xgboost-metrics { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.xgboost-page .xgboost-metrics .metric { min-width: 0; }
+.xgboost-page .xgboost-metrics .metric-value { font-size: clamp(23px, 2.5vw, 31px); }
+.xgboost-page .xgboost-plot-card { padding: 20px; margin-bottom: 18px; min-width: 0; }
+.xgboost-page .xgboost-plot-wrap { width: 100%; }
+.xgboost-page canvas { display: block; width: 100%; height: auto; cursor: crosshair; }
+.xgboost-page .xgboost-legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 12px; color: var(--muted); margin-top: 9px; }
+.xgboost-page .xgboost-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.xgboost-page .xgboost-key { width: 11px; height: 11px; border-radius: 50%; display: inline-block; background: var(--green); }
+.xgboost-page .xgboost-malignant { background: #b16a31; }
+.xgboost-page .xgboost-wrong { background: #fff; border: 2px solid var(--ink); }
+.xgboost-page .xgboost-selected { background: #fff; border: 2px solid #3159c9; }
+.xgboost-page .xgboost-lower { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin-bottom: 18px; }
+.xgboost-page .xgboost-detail { padding: 20px; min-width: 0; }
+.xgboost-page .xgboost-detail h3 { margin-bottom: 12px; }
+.xgboost-page .xgboost-prob { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+.xgboost-page .xgboost-prob strong { color: var(--green); }
+.xgboost-page .xgboost-prob-track { height: 10px; background: #f2ddc6; border-radius: 9px; overflow: hidden; margin: 6px 0 14px; }
+.xgboost-page .xgboost-prob-track span { display: block; height: 100%; background: var(--green); }
+.xgboost-page .xgboost-correction div { display: flex; justify-content: space-between; gap: 8px; border-top: 1px solid var(--line); padding: 5px 0; font-size: 13px; }
+.xgboost-page .xgboost-correction strong { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.xgboost-page .xgboost-path { max-height: 360px; overflow: auto; font-size: 13px; }
+.xgboost-page .xgboost-path-step { border-left: 3px solid var(--green); padding: 7px 11px; margin: 0 0 9px; background: var(--mint); border-radius: 0 6px 6px 0; }
+.xgboost-page .xgboost-path-step strong, .xgboost-page .xgboost-path-step span { display: block; overflow-wrap: anywhere; }
+.xgboost-page .xgboost-path-step span { color: var(--muted); }
+.xgboost-page .xgboost-leaf { border-color: #b16a31; background: #fff3e5; }
+.xgboost-page .xgboost-chart svg { display: block; width: 100%; height: auto; }
+.xgboost-page .xgboost-matrix { width: 100%; border-collapse: collapse; text-align: center; font-size: 13px; }
+.xgboost-page .xgboost-matrix caption { text-align: left; color: var(--muted); margin-bottom: 8px; }
+.xgboost-page .xgboost-matrix th, .xgboost-page .xgboost-matrix td { border: 1px solid var(--line); padding: 9px 4px; }
+.xgboost-page .xgboost-matrix td:nth-child(2) { background: var(--mint); font-weight: 650; }
+.xgboost-page .xgboost-explain p { font-size: 13px; color: var(--muted); margin: 7px 0; }
+.xgboost-page .xgboost-explain strong { color: var(--ink); }
+@media (max-width: 1000px) { .xgboost-page .xgboost-layout { grid-template-columns: 240px minmax(0, 1fr); gap: 16px; } .xgboost-page .xgboost-lower { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .xgboost-page .xgboost-layout { grid-template-columns: 1fr; } .xgboost-page .xgboost-heading { display: block; } .xgboost-page .xgboost-badge { display: inline-block; margin-top: 9px; } .xgboost-page .xgboost-metrics { grid-template-columns: 1fr 1fr; gap: 9px; } .xgboost-page .xgboost-metrics .metric:first-child { grid-column: 1 / -1; } .xgboost-page .xgboost-plot-card, .xgboost-page .xgboost-detail { padding: 14px; } }
