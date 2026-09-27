@@ -11,6 +11,7 @@ import { initReinforcement } from './rl/ui.js';
 import { initAssociation } from './association/ui.js';
 import { initNLP } from './nlp/ui.js';
 import { initPCA } from './dimension/ui.js';
+import { initBoosting } from './boosting/ui.js';
 import { $, esc } from './shared/dom.js';
 import { downloadCSV } from './shared/download.js';
 const palette = [
@@ -915,12 +916,14 @@ const viewButtons = {
   qlearning: 'qlearningTask',
   association: 'assocTask',
   nlp: 'nlpTask',
+  boosting: 'boostTask',
 };
 let activeView = null,
   reinforcement = null,
   association = null,
   nlp = null,
-  pca = null;
+  pca = null,
+  boosting = null;
 
 function viewFromHash() {
   const view = location.hash.slice(1);
@@ -934,13 +937,17 @@ function activateView(next, syncHistory = true) {
   if (activeView === 'association') association.hide();
   if (activeView === 'nlp') nlp.hide();
   if (activeView === 'pca') pca.hide();
-  if (busy && ['association', 'nlp', 'pca'].includes(next)) markDirty();
+  if (activeView === 'boosting') boosting.hide();
+  if (busy && ['association', 'nlp', 'pca', 'boosting'].includes(next)) markDirty();
 
   const existing = ['regression', 'classification', 'clustering'].includes(
     next,
   );
   $('supervisedWorkspace').hidden = !existing;
-  if (next === 'pca') {
+  if (next === 'boosting') {
+    boosting ??= initBoosting();
+    boosting.show();
+  } else if (next === 'pca') {
     pca ??= initPCA();
     pca.show();
   } else if (next === 'nlp') {

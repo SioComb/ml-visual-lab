@@ -30,12 +30,11 @@ test('navigation groups ten algorithms into basic, exploration, and advanced row
   assert.ok(advanced.indexOf('NLP') < advanced.indexOf('Boosting'));
 });
 
-test('Boosting remains planned and PCA becomes an enabled navigation item', () => {
-  for (const label of ['Boosting']) {
-    const button = html.match(new RegExp(`<button[^>]*disabled[^>]*>[\\s\\S]*?${label}[\\s\\S]*?</button`));
-    assert.ok(button, `${label} should be a disabled navigation item`);
-    assert.match(button[0], /準備中/);
-  }
+test('Boosting and PCA are enabled navigation items', () => {
+  const boostButton = section('advancedAlgorithmsTitle').match(/<button[^>]*id="boostTask"[^>]*>[\s\S]*?<\/button/);
+  assert.ok(boostButton);
+  assert.match(boostButton[0], /Boosting[\s\S]*?AdaBoost/);
+  assert.doesNotMatch(boostButton[0], /disabled|準備中/);
   const pcaButton = section('basicAlgorithmsTitle').match(/<button[^>]*id="pcaTask"[^>]*>[\s\S]*?<\/button/);
   assert.ok(pcaButton, 'PCA should have a direct navigation target');
   assert.match(pcaButton[0], /次元圧縮[\s\S]*?PCA/);

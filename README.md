@@ -16,6 +16,7 @@ HTML・CSS・JavaScriptで構成された静的サイトで、データの前処
 | 次元圧縮 | WineのPCA可視化＋3クラスロジスティック回帰、全13特徴量との精度比較 |
 | 強化学習 | Multi-Armed Bandit（Greedy・ε-Greedy・UCB）、広告配信のThompson Sampling、Q-learning迷路、簡略状態のQ-learning Snake |
 | 自然言語処理 | Bag of Words＋Logistic Regression（感情分析・5ジャンル分類） |
+| Boosting | AdaBoost＋Decision Stump、Stageごとの重み・境界・Accuracyの観察 |
 
 - 数値・カテゴリ列の指定、One-hotエンコーディング、標準化、Min-Maxスケーリング
 - 学習・テストデータの分割と評価指標の比較
@@ -103,6 +104,18 @@ Wine以外の同梱サンプルは学習用の人工データです。モデル�
 - Accuracy、正解数、誤分類数、精度差、寄与率、混同行列はすべて実計算です。寄与率は保持した分散の割合で、分類精度ではありません。分割・手法によって精度は変わり、全特徴量が必ず優れるとは限りません。
 
 独立した処理は `dist/dimension/` に配置しています（設計書の `dist/pca/` から配置先のみ変更）。数学処理とデータリーク防止は `npm test`、画面操作・390px表示・reduced motion・再読み込みは `node tests/pca-browser.mjs` で検証できます。後者は既存の検証用Playwrightキャッシュを使います。
+
+## Boosting（AdaBoost）
+
+上部の「Boosting」または `/#boosting` から開きます。`dist/boosting/data/` の `moons.csv`・`circles.csv`・`classification.csv`（各1,000件、`x1,x2,target`）を使用し、新しいデータは生成しません。
+
+- 弱学習器数1〜200、Learning Rate 0.1〜2、テスト割合10〜40%を指定。初期値は50本・1.0・25%です。seed 42の層化分割でTrain / Testを分離し、学習は専用Web Workerで行います。
+- 弱学習器は深さ1のDecision Stump。Trainの重み付き誤分類率を最小化する分割を探索し、`α = learning_rate × 0.5 × ln((1 − error) / error)` で投票の重みを決めます。誤分類／正解に `exp(α)` / `exp(−α)` を掛け、ログ空間で安定に正規化します。誤分類率0では有限値にクリップして終了、0.5以上ではその木を追加せず終了します。
+- Stageごとに学習前後の重み、弱学習器・合成モデルの予測、誤分類、Train / Test Accuracy、60×40グリッドの予測を保存。スライダーと再生で結果を切り替え、再学習はしません。ページを離れると再生は止まり、結果は保持されます。
+- 点の面積はsample weight、×は表示モデルの誤分類、背景は予測領域です。初期重みの16倍以上は表示サイズだけ上限を設け、ツールチップに実際の重みを表示します。テスト点には学習重みを付けません。
+- メイン指標と推移グラフは合成モデルのTest評価。単体の木との比較も同一Testを使用します。設定を繰り返し比べるための教材であり、最終性能の厳密な検証には別の未使用データが必要です。
+
+実装は `dist/boosting/` のデータ読み込み・モデル・Worker・描画・UI・CSSに分離しています。`npm test` で計算、境界ケース、データリーク防止を検証し、既存のPlaywright環境では `node tests/boosting-browser.mjs` で画面連動、3データセット、再試行、レスポンシブ表示と既存ページへの移動を確認できます。
 
 ## 自然言語処理（NLP）
 

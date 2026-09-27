@@ -16,6 +16,7 @@
       href="./association/style.css"
     /><link rel="stylesheet" href="./dimension/style.css"
     /><link rel="stylesheet" href="./nlp/style.css"
+    /><link rel="stylesheet" href="./boosting/style.css"
   /></head>
   <body>
     <header class="topbar"
@@ -92,9 +93,9 @@
                 <small>購買パターン</small></button
               ><button id="nlpTask" type="button" aria-pressed="false"
                 ><span>💬</span> NLP <small>Bag of Words</small></button
-              ><button type="button" disabled
+              ><button id="boostTask" type="button" aria-pressed="false"
                 ><span>🚀</span> Boosting
-                <small>準備中</small></button
+                <small>AdaBoost</small></button
               ></div
             ></section
           ></nav
@@ -440,6 +441,7 @@
       ></section
       ><section id="pca" class="pca-page" hidden aria-label="次元圧縮 / PCA"></section
       ><section id="nlp" class="nlp-page" hidden aria-label="自然言語処理 / NLP"></section
+      ><section id="boosting" class="boosting-page" hidden aria-label="Boosting / AdaBoost"></section
       ><footer
         ><span><b>ML Visual Lab</b> · 学んで、変えて、確かめる。</span
         ><span
