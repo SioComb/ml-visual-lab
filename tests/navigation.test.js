@@ -11,7 +11,7 @@ function section(id) {
   return html.slice(start, end);
 }
 
-test('navigation groups ten algorithms into basic, exploration, and advanced rows', () => {
+test('navigation groups algorithms into basic, exploration, and advanced rows', () => {
   const basic = section('basicAlgorithmsTitle');
   const exploration = section('explorationAlgorithmsTitle');
   const advanced = section('advancedAlgorithmsTitle');
@@ -30,12 +30,13 @@ test('navigation groups ten algorithms into basic, exploration, and advanced row
   assert.ok(advanced.indexOf('NLP') < advanced.indexOf('Boosting'));
 });
 
-test('Boosting remains planned and PCA becomes an enabled navigation item', () => {
-  for (const label of ['Boosting']) {
-    const button = html.match(new RegExp(`<button[^>]*disabled[^>]*>[\\s\\S]*?${label}[\\s\\S]*?</button`));
-    assert.ok(button, `${label} should be a disabled navigation item`);
-    assert.match(button[0], /準備中/);
-  }
+test('Boosting opens XGBoost from advanced navigation and PCA remains enabled', () => {
+  const xgboostButton = section('advancedAlgorithmsTitle').match(/<button[^>]*id="xgboostTask"[^>]*>[\s\S]*?<\/button/);
+  assert.ok(xgboostButton);
+  assert.match(xgboostButton[0], /Boosting[\s\S]*?XGBoost/);
+  assert.match(xgboostButton[0], /aria-pressed="false"/);
+  assert.doesNotMatch(xgboostButton[0], /disabled|準備中/);
+  assert.doesNotMatch(section('basicAlgorithmsTitle'), /xgboostTask/);
   const pcaButton = section('basicAlgorithmsTitle').match(/<button[^>]*id="pcaTask"[^>]*>[\s\S]*?<\/button/);
   assert.ok(pcaButton, 'PCA should have a direct navigation target');
   assert.match(pcaButton[0], /次元圧縮[\s\S]*?PCA/);

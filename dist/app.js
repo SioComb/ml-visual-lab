@@ -11,6 +11,7 @@ import { initReinforcement } from './rl/ui.js';
 import { initAssociation } from './association/ui.js';
 import { initNLP } from './nlp/ui.js';
 import { initPCA } from './dimension/ui.js';
+import { initXGBoost } from './boosting/ui.js';
 import { $, esc } from './shared/dom.js';
 import { downloadCSV } from './shared/download.js';
 const palette = [
@@ -908,6 +909,7 @@ $('downloadProcessed').onclick = () => {
 const viewButtons = {
   regression: 'regTask',
   classification: 'clsTask',
+  xgboost: 'xgboostTask',
   clustering: 'clusterTask',
   pca: 'pcaTask',
   reinforcement: 'rlTask',
@@ -920,7 +922,8 @@ let activeView = null,
   reinforcement = null,
   association = null,
   nlp = null,
-  pca = null;
+  pca = null,
+  xgboost = null;
 
 function viewFromHash() {
   const view = location.hash.slice(1);
@@ -934,7 +937,8 @@ function activateView(next, syncHistory = true) {
   if (activeView === 'association') association.hide();
   if (activeView === 'nlp') nlp.hide();
   if (activeView === 'pca') pca.hide();
-  if (busy && ['association', 'nlp', 'pca'].includes(next)) markDirty();
+  if (activeView === 'xgboost') xgboost.hide();
+  if (busy && ['association', 'nlp', 'pca', 'xgboost'].includes(next)) markDirty();
 
   const existing = ['regression', 'classification', 'clustering'].includes(
     next,
@@ -943,6 +947,9 @@ function activateView(next, syncHistory = true) {
   if (next === 'pca') {
     pca ??= initPCA();
     pca.show();
+  } else if (next === 'xgboost') {
+    xgboost ??= initXGBoost();
+    xgboost.show();
   } else if (next === 'nlp') {
     nlp ??= initNLP();
     nlp.show();
