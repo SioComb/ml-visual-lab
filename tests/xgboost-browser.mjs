@@ -19,6 +19,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   const errors = []; page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(origin);
+  await page.locator('#advancedCategory').click();
   await page.getByRole('group', { name: '発展・応用', exact: true }).getByRole('button', { name: /Boosting/ }).click();
   assert.equal(new URL(page.url()).hash, '#xgboost');
   await page.locator('#xgb-accuracy').filter({ hasNotText: '—' }).waitFor();
@@ -50,6 +51,7 @@ try {
   assert.equal(await page.locator('#xgb-history-value').textContent(), '0 / 0本');
   await page.locator('#xgb-next').click();
   await page.locator('#xgb-history-value').filter({ hasText: '1 / 1本' }).waitFor();
+  await page.locator('#basicCategory').click();
   await page.locator('#clsTask').click();
   assert.equal(await page.locator('#xgboost').isVisible(), false);
   await page.goBack();

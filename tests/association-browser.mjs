@@ -35,6 +35,15 @@ try {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
   const done = () => page.locator('#mining-status').filter({ hasText: '探索完了' }).waitFor();
   const run = async () => { await page.locator('#run-mining').click(); await done(); };
+  const open = async id => {
+    const category = ['regTask', 'clsTask', 'clusterTask', 'pcaTask'].includes(id)
+      ? 'basicCategory'
+      : ['rlTask', 'adsTask', 'qlearningTask'].includes(id)
+        ? 'explorationCategory'
+        : 'advancedCategory';
+    if (!(await page.locator(`#${id}`).isVisible())) await page.locator(`#${category}`).click();
+    await page.locator(`#${id}`).click();
+  };
   await mkdir('.cache/qa/screenshots', { recursive: true });
   await page.goto(`http://127.0.0.1:${server.address().port}/`);
   const origin = `http://127.0.0.1:${server.address().port}`;
@@ -42,7 +51,7 @@ try {
   assert.equal(await page.evaluate(() => window.miningWorkers.started), 0);
   await page.locator('#mainPlot circle').first().waitFor();
   await page.evaluate(() => { window.originalWorkspace = document.getElementById('supervisedWorkspace'); });
-  await page.locator('#assocTask').click(); await done();
+  await open('assocTask'); await done();
   assert.equal(page.url(), `${origin}/#association`);
   assert.equal(await page.evaluate(() => window.originalWorkspace === document.getElementById('supervisedWorkspace')), true);
   assert.equal(await page.locator('#supervisedWorkspace').isVisible(), false);
@@ -50,7 +59,7 @@ try {
   assert.equal(await page.locator('#assocTask').getAttribute('aria-pressed'), 'true');
   assert.deepEqual(await page.evaluate(() => window.miningWorkers), { started: 1, terminated: 1, live: 0 });
   const initialHistory = await page.evaluate(() => history.length);
-  await page.locator('#assocTask').click();
+  await open('assocTask');
   assert.equal(await page.evaluate(() => history.length), initialHistory);
   assert.equal(await page.evaluate(() => window.miningWorkers.started), 1);
   assert.deepEqual(await page.locator('.method-card h4').allTextContents(), ['Apriori', 'FP-Growth', 'Eclat']);
@@ -72,11 +81,11 @@ try {
   assert.equal(await page.locator('#basket-match').innerText(), selectedBasket);
   assert.equal(await page.evaluate(() => window.miningWorkers.started), 1);
   for (const id of ['rlTask', 'clsTask', 'clusterTask', 'regTask']) {
-    await page.locator('#' + id).click();
+    await open(id);
     assert.equal(await page.locator('#association').isVisible(), false);
     assert.equal(await page.locator('#' + id).getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('.task-switch [aria-pressed="true"]').count(), 1);
-    await page.locator('#assocTask').click(); await done();
+    await open('assocTask'); await done();
     assert.equal(await page.locator('#pattern-table').innerText(), completedPatterns);
   }
   assert.equal(await page.evaluate(() => window.originalWorkspace === document.getElementById('supervisedWorkspace')), true);
@@ -110,7 +119,7 @@ try {
     await page.evaluate(id => { document.getElementById('run-mining').click(); document.getElementById(id).click(); }, target);
     assert.equal(await page.locator('#association').isVisible(), false);
     assert.equal(await page.evaluate(() => window.miningWorkers.live), 0);
-    await page.locator('#assocTask').click();
+    await open('assocTask');
     assert.equal(await page.locator('#mining-status').innerText(), '中止');
     assert.equal(await page.locator('#run-mining').isEnabled(), true);
     assert.equal(await page.locator('#cancel-mining').isVisible(), false);
@@ -127,7 +136,7 @@ try {
   await page.screenshot({ path: '.cache/qa/screenshots/association-mobile-top.png' });
   await page.locator('.comparison-panel').scrollIntoViewIfNeeded();
   await page.screenshot({ path: '.cache/qa/screenshots/association-mobile-results.png' });
-  await page.locator('#regTask').click();
+  await open('regTask');
   if (await page.locator('#train').isEnabled() && await page.locator('#resultStatus').innerText() !== '学習完了') await page.locator('#train').click();
   await page.locator('#resultStatus').filter({ hasText: /^学習完了$/ }).waitFor();
   await page.locator('#mainPlot circle').first().waitFor();
@@ -146,7 +155,7 @@ try {
   assert.equal(page.url(), `${origin}/#association`);
   assert.equal(await page.locator('#assocTask').getAttribute('aria-pressed'), 'true');
   assert.equal(await page.locator('#association').isVisible(), true);
-  await page.locator('#rlTask').click();
+  await open('rlTask');
   await page.goBack(); await done();
   await page.goForward(); await page.locator('#reinforcement').waitFor({ state: 'visible' });
   assert.equal(await page.locator('#rlTask').getAttribute('aria-pressed'), 'true');

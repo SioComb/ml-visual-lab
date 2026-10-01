@@ -188,78 +188,67 @@ main {
 }
 .task-switch {
   display: flex;
-  background: #e7ece8;
-  padding: 5px;
-  border-radius: 10px;
-  flex-shrink: 0;
-  gap: 4px;
+  gap: 8px;
+  padding: 3px 0 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 .task-switch button {
   background: transparent;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 7px;
-  min-width: 134px;
-  text-align: left;
-  padding: 9px 15px;
-  font-size: 16px;
-  font-weight: 650;
-  line-height: 1.4;
-}
-.task-switch button > span {
-  font-size: 19px;
-  padding-right: 5px;
-}
-.task-switch small {
-  display: block;
-  font-size: 12px;
-  padding-left: 26px;
-  color: var(--muted);
-  font-weight: 400;
-  margin-top: 2px;
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1.5;
+  white-space: nowrap;
 }
 .task-switch .active {
-  background: var(--white);
-  box-shadow: 0 2px 5px #1a382712;
+  background: var(--mint);
+  border-color: #b8d8c9;
   color: var(--green);
+  font-weight: 700;
 }
 .algorithm-catalog {
   display: grid;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 7px;
+  min-width: 0;
 }
 .algorithm-group {
-  display: grid;
-  grid-template-columns: 190px minmax(0, 1fr);
-  align-items: stretch;
-  gap: 12px;
+  min-width: 0;
 }
-.algorithm-group-heading {
+.category-tabs {
   display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 8px 2px;
+  gap: 26px;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
-.algorithm-group-heading h2 {
-  font-size: 15px;
-  line-height: 1.4;
+.category-tab {
+  position: relative;
+  flex: 0 0 auto;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  padding: 7px 2px 9px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
 }
-.algorithm-group-heading p {
-  margin-top: 2px;
-  font-size: 11px;
-  line-height: 1.45;
-}
-.algorithm-group-number {
+.category-tab.active {
+  border-bottom-color: var(--green);
   color: var(--green);
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
+  font-weight: 700;
 }
 .task-switch button:disabled {
   cursor: default;
   opacity: 0.58;
   filter: none;
-}
-.task-switch button:disabled small {
-  color: #8a7160;
 }
 .workspace {
   display: grid;
@@ -925,15 +914,8 @@ dialog li p,
   .page-heading {
     align-items: flex-start;
   }
-  .algorithm-group {
-    grid-template-columns: 160px minmax(0, 1fr);
-  }
   h1 {
     font-size: 25px;
-  }
-  .task-switch button {
-    min-width: 111px;
-    padding: 9px;
   }
   .chart-header {
     flex-wrap: wrap;
@@ -1005,24 +987,10 @@ dialog li p,
   }
   .algorithm-catalog {
     width: 100%;
-    gap: 17px;
-  }
-  .algorithm-group {
-    grid-template-columns: 1fr;
     gap: 7px;
   }
-  .algorithm-group-heading {
-    padding: 0 3px;
-  }
-  .algorithm-group-heading p {
-    display: none;
-  }
-  .task-switch button {
-    width: 50%;
-    text-align: center;
-  }
-  .task-switch small {
-    padding-left: 0;
+  .category-tabs {
+    gap: 21px;
   }
   .workspace {
     grid-template-columns: 1fr;
@@ -1168,12 +1136,6 @@ dialog li p,
 /* Additional learning modes preserve the existing visual system. */
 .page-heading {
   flex-wrap: wrap;
-}
-.task-switch button {
-  min-width: 128px;
-}
-.task-switch small {
-  white-space: normal;
 }
 .standardize {
   margin-top: 18px;
@@ -1364,21 +1326,6 @@ dialog li p,
 .dendrogram svg {
   display: block;
 }
-.sources {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  font-size: 12px;
-  color: var(--muted);
-  padding: 0 0 25px;
-}
-.sources a {
-  color: var(--green);
-  text-underline-offset: 3px;
-}
-.sources span {
-  flex-basis: 100%;
-}
 #diagnostic > svg {
   max-height: 290px;
 }
@@ -1391,18 +1338,8 @@ dialog li p,
 }
 @media (max-width: 760px) {
   .task-switch button {
-    min-width: 0;
-    width: auto;
-    flex: 1;
-    padding: 10px 5px;
+    padding: 7px 12px;
     font-size: 14px;
-  }
-  .task-switch small {
-    font-size: 12px;
-  }
-  .task-switch button > span {
-    font-size: 17px;
-    padding-right: 3px;
   }
   .chart-tools {
     justify-content: flex-start;
@@ -1416,9 +1353,6 @@ dialog li p,
   }
   .tree-panel {
     padding: 17px;
-  }
-  .sources {
-    gap: 8px 14px;
   }
   .settings {
     grid-template-columns: 1fr;
@@ -1532,17 +1466,4 @@ dialog li p,
   color: var(--muted);
   margin-top: 10px;
   font-size: 12px;
-}
-
-/* Shared navigation: each algorithm group uses a wrapping button row. */
-.task-switch {
-  flex-wrap: wrap;
-}
-.task-switch button {
-  flex: 1 1 150px;
-}
-@media (max-width: 760px) {
-  .task-switch button {
-    flex: 1 1 100px;
-  }
 }
