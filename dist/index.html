@@ -36,66 +36,78 @@
           ><h1>データから、モデルを見つけよう。</h1
           ><p>条件を変えて学習し、予測の仕組みを目で確かめる。</p></div
         ><nav class="algorithm-catalog" aria-label="アルゴリズム一覧"
+          ><div class="category-tabs" role="tablist" aria-label="カテゴリ"
+            ><button
+              id="basicCategory"
+              class="category-tab active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              aria-controls="basicAlgorithms"
+              >基本アルゴリズム</button
+            ><button
+              id="explorationCategory"
+              class="category-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="explorationAlgorithms"
+              tabindex="-1"
+              >強化学習・探索</button
+            ><button
+              id="advancedCategory"
+              class="category-tab"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              aria-controls="advancedAlgorithms"
+              tabindex="-1"
+              >発展・応用</button
+            ></div
           ><section
+            id="basicAlgorithms"
             class="algorithm-group"
-            aria-labelledby="basicAlgorithmsTitle"
-            ><div class="algorithm-group-heading"
-              ><span class="algorithm-group-number">01</span
-              ><div
-                ><h2 id="basicAlgorithmsTitle">基本アルゴリズム</h2
-                ><p>機械学習の基本的な考え方を学ぶ</p></div
-              ></div
+            role="tabpanel"
+            aria-labelledby="basicCategory"
             ><div class="task-switch" role="group" aria-label="基本アルゴリズム"
               ><button id="regTask" class="active" aria-pressed="true"
-                ><span>📈</span> 回帰 <small>教師あり</small></button
+                >回帰</button
               ><button id="clsTask" aria-pressed="false"
-                ><span>🗃️</span> 分類 <small>教師あり</small></button
+                >分類</button
               ><button id="clusterTask" aria-pressed="false"
-                ><span>🫧</span> クラスタリング
-                <small>教師なし</small></button
+                >クラスタリング</button
               ><button id="pcaTask" type="button" aria-pressed="false"
-                ><span>📐</span> 次元圧縮 <small>PCA</small></button
+                >次元圧縮</button
               ></div
             ></section
           ><section
+            id="explorationAlgorithms"
             class="algorithm-group"
-            aria-labelledby="explorationAlgorithmsTitle"
-            ><div class="algorithm-group-heading"
-              ><span class="algorithm-group-number">02</span
-              ><div
-                ><h2 id="explorationAlgorithmsTitle">強化学習・探索</h2
-                ><p>行動と報酬からよりよい選択を学ぶ</p></div
-              ></div
+            role="tabpanel"
+            aria-labelledby="explorationCategory"
+            hidden
             ><div class="task-switch" role="group" aria-label="強化学習・探索"
               ><button id="rlTask" aria-pressed="false"
-                ><span>🎰</span> Bandit Algorism
-                <small>01 バンディット</small></button
+                >Bandit Algorithm</button
               ><button id="adsTask" type="button" aria-pressed="false"
-                ><span>📰</span> Thompson Sampling
-                <small>広告配信</small></button
+                >Thompson Sampling</button
               ><button id="qlearningTask" type="button" aria-pressed="false"
-                ><span>🧩</span> Q-Learning
-                <small>迷路とヘビゲーム</small></button
+                >Q-Learning</button
               ></div
             ></section
           ><section
+            id="advancedAlgorithms"
             class="algorithm-group"
-            aria-labelledby="advancedAlgorithmsTitle"
-            ><div class="algorithm-group-heading"
-              ><span class="algorithm-group-number">03</span
-              ><div
-                ><h2 id="advancedAlgorithmsTitle">発展・応用</h2
-                ><p>基本を組み合わせて実践的な課題を解く</p></div
-              ></div
+            role="tabpanel"
+            aria-labelledby="advancedCategory"
+            hidden
             ><div class="task-switch" role="group" aria-label="発展・応用"
               ><button id="assocTask" type="button" aria-pressed="false"
-                ><span>🛒</span> Association
-                <small>購買パターン</small></button
+                >Association</button
               ><button id="nlpTask" type="button" aria-pressed="false"
-                ><span>💬</span> NLP <small>Bag of Words</small></button
+                >NLP</button
               ><button id="xgboostTask" type="button" aria-pressed="false"
-                ><span>🚀</span> Boosting
-                <small>XGBoost</small></button
+                >Boosting</button
               ></div
             ></section
           ></nav
@@ -447,35 +459,6 @@
         ><span
           >Wine以外のサンプルは人工データです。CSVは保存・送信されません。</span
         ></footer
-      ><div class="sources"
-        >手法の参考：<a
-          href="https://scikit-learn.org/stable/modules/svm.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          >SVM・SVR</a
-        ><a
-          href="https://scikit-learn.org/stable/modules/tree.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          >決定木</a
-        ><a
-          href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          >ランダムフォレスト</a
-        ><a
-          href="https://scikit-learn.org/stable/modules/clustering.html"
-          target="_blank"
-          rel="noopener noreferrer"
-          >クラスタリング</a
-        ><a
-          href="https://www.jdla.org/certificate/general/"
-          target="_blank"
-          rel="noopener noreferrer"
-          >G検定（JDLA）</a
-        ><span
-          >本サイトは学習用の独自実装で、scikit-learnを実行するものではありません。</span
-        ></div
       ></main
     >
     <dialog id="guide"

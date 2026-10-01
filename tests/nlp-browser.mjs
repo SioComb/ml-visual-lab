@@ -23,6 +23,15 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   const origin = `http://127.0.0.1:${server.address().port}`;
   const ready = () => page.locator('#nlp-status').filter({ hasText: '学習が完了' }).waitFor();
+  const open = async id => {
+    const category = ['regTask', 'clsTask', 'clusterTask', 'pcaTask'].includes(id)
+      ? 'basicCategory'
+      : ['rlTask', 'adsTask', 'qlearningTask'].includes(id)
+        ? 'explorationCategory'
+        : 'advancedCategory';
+    if (!(await page.locator(`#${id}`).isVisible())) await page.locator(`#${category}`).click();
+    await page.locator(`#${id}`).click();
+  };
   const analyze = async text => {
     if (text !== undefined) await page.locator('#nlp-text').fill(text);
     await page.locator('#nlp-analyze').click();
@@ -84,9 +93,9 @@ try {
   console.log('PASS both datasets, real predictions, vectors, unknown/empty input, escaping, and class probabilities');
 
   for (const id of ['regTask', 'clsTask', 'clusterTask', 'rlTask', 'assocTask']) {
-    await page.locator(`#${id}`).click();
+    await open(id);
     assert.equal(await page.locator('#nlp').isVisible(), false);
-    await page.locator('#nlpTask').click();
+    await open('nlpTask');
     assert.equal(await page.locator('#nlp-output').isVisible(), true);
     assert.equal(await page.locator('#supervisedWorkspace').isVisible(), false);
   }

@@ -25,6 +25,15 @@ try {
   page.on('request', req => { if (req.url().endsWith('/wine.csv')) requests++; });
   const origin = `http://127.0.0.1:${server.address().port}`;
   const ready = () => page.locator('#pca-status').filter({ hasText: '178件を13次元から2次元へ圧縮しました' }).waitFor();
+  const open = async id => {
+    const category = ['regTask', 'clsTask', 'clusterTask', 'pcaTask'].includes(id)
+      ? 'basicCategory'
+      : ['rlTask', 'adsTask', 'qlearningTask'].includes(id)
+        ? 'explorationCategory'
+        : 'advancedCategory';
+    if (!(await page.locator(`#${id}`).isVisible())) await page.locator(`#${category}`).click();
+    await page.locator(`#${id}`).click();
+  };
   const progress = () => page.locator('#pca-progress').inputValue().then(Number);
   const scrub = async value => {
     await page.locator('#pca-progress').fill(String(value));
@@ -60,14 +69,14 @@ try {
 
   await page.locator('#pca-play').click();
   await page.waitForFunction(() => Number(document.querySelector('#pca-progress').value) > 3);
-  await page.locator('#regTask').click(); const hiddenProgress = await progress();
+  await open('regTask'); const hiddenProgress = await progress();
   await page.waitForTimeout(150); assert.equal(await progress(), hiddenProgress);
   for (const id of ['clsTask', 'clusterTask', 'rlTask', 'adsTask', 'qlearningTask', 'assocTask', 'nlpTask']) {
-    await page.locator(`#${id}`).click();
+    await open(id);
     assert.equal(await page.locator('#pca').isVisible(), false);
     assert.equal(await page.locator(`#${id}`).getAttribute('aria-pressed'), 'true');
   }
-  await page.locator('#pcaTask').click(); await ready();
+  await open('pcaTask'); await ready();
   assert.equal(await progress(), hiddenProgress); assert.equal(requests, 1);
 
   await page.setViewportSize({ width: 390, height: 844 });

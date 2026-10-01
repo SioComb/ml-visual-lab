@@ -1,6 +1,4 @@
 /* Keep NLP-specific layout and typography inside its own lab. */
-.task-switch:has(#nlpTask) { max-width: 100%; }
-#nlpTask { min-width: 180px; }
 .nlp-page .results > .panel,
 .nlp-page #nlp-output > .panel { margin-bottom: 20px; }
 .nlp-page .nlp-badge { color: var(--green); background: var(--mint); border-radius: 6px; padding: 6px 10px; font-size: 12px; }
@@ -55,8 +53,6 @@
 .nlp-page .nlp-sample { margin-top: 16px; font-size: 13px; }
 .nlp-page .nlp-sample strong { color: var(--green); }
 @media (max-width: 760px) {
-  .task-switch:has(#nlpTask) button { flex: 1 1 calc(50% - 4px); }
-  #nlpTask { min-width: 0; }
   .nlp-page .nlp-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .nlp-page .nlp-flow li:nth-child(2)::after { content: ''; }
   .nlp-page .nlp-input-footer { align-items: stretch; flex-direction: column; }

@@ -918,6 +918,23 @@ const viewButtons = {
   association: 'assocTask',
   nlp: 'nlpTask',
 };
+const navigationCategories = {
+  basic: {
+    tab: 'basicCategory',
+    panel: 'basicAlgorithms',
+    views: ['regression', 'classification', 'clustering', 'pca'],
+  },
+  exploration: {
+    tab: 'explorationCategory',
+    panel: 'explorationAlgorithms',
+    views: ['reinforcement', 'ads', 'qlearning'],
+  },
+  advanced: {
+    tab: 'advancedCategory',
+    panel: 'advancedAlgorithms',
+    views: ['association', 'nlp', 'xgboost'],
+  },
+};
 let activeView = null,
   reinforcement = null,
   association = null,
@@ -928,6 +945,27 @@ let activeView = null,
 function viewFromHash() {
   const view = location.hash.slice(1);
   return Object.hasOwn(viewButtons, view) ? view : 'regression';
+}
+
+function showNavigationCategory(selectedCategory) {
+  for (const [name, category] of Object.entries(navigationCategories)) {
+    const selected = name === selectedCategory;
+    $(category.tab).classList.toggle('active', selected);
+    $(category.tab).setAttribute('aria-selected', String(selected));
+    $(category.tab).tabIndex = selected ? 0 : -1;
+    $(category.panel).hidden = !selected;
+  }
+}
+
+function syncNavigation(view) {
+  for (const [buttonView, id] of Object.entries(viewButtons)) {
+    $(id).classList.toggle('active', buttonView === view);
+    $(id).setAttribute('aria-pressed', String(buttonView === view));
+  }
+  const category = Object.entries(navigationCategories).find(([, item]) =>
+    item.views.includes(view),
+  );
+  if (category) showNavigationCategory(category[0]);
 }
 
 function activateView(next, syncHistory = true) {
@@ -965,10 +1003,7 @@ function activateView(next, syncHistory = true) {
             ? 'qlearning'
             : 'reinforcement';
       activeView = reinforcementView;
-      for (const [view, id] of Object.entries(viewButtons)) {
-        $(id).classList.toggle('active', view === reinforcementView);
-        $(id).setAttribute('aria-pressed', String(view === reinforcementView));
-      }
+      syncNavigation(reinforcementView);
       if (location.hash !== `#${reinforcementView}`)
         history.pushState(null, '', `#${reinforcementView}`);
     });
@@ -983,10 +1018,7 @@ function activateView(next, syncHistory = true) {
     if (!result && !dirty && !busy && dataset.synthetic) run();
   }
   activeView = next;
-  for (const [view, id] of Object.entries(viewButtons)) {
-    $(id).classList.toggle('active', view === next);
-    $(id).setAttribute('aria-pressed', String(view === next));
-  }
+  syncNavigation(next);
   if (syncHistory && location.hash !== `#${next}`) {
     history.pushState(null, '', `#${next}`);
   }
@@ -994,6 +1026,18 @@ function activateView(next, syncHistory = true) {
 
 for (const [view, id] of Object.entries(viewButtons)) {
   $(id).onclick = () => activateView(view);
+}
+for (const [name, category] of Object.entries(navigationCategories)) {
+  $(category.tab).onclick = () => showNavigationCategory(name);
+  $(category.tab).onkeydown = (event) => {
+    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+    event.preventDefault();
+    const names = Object.keys(navigationCategories);
+    const offset = event.key === 'ArrowRight' ? 1 : -1;
+    const next = names[(names.indexOf(name) + offset + names.length) % names.length];
+    showNavigationCategory(next);
+    $(navigationCategories[next].tab).focus();
+  };
 }
 window.addEventListener('hashchange', () =>
   activateView(viewFromHash(), false),
